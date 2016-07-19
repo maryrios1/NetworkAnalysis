@@ -270,18 +270,22 @@ public class ConnectionRDBMS {
 			// Create relationship
 			switch (relation) {
 			case RETWEETED:
-
-				preparedStatement.setString(3, "RETWEETED");
+				//retweeted_status
+				if(jsonObject.get("retweeted_status") != null)
+				{
+					it has to break!!! check the correct way to add retweeted tweets
+					System.out.println("RETWEETED in");
+					preparedStatement.setString(3, "RETWEETED");
+				}
 				break;
 			case REPLIED:
-				if (jsonObject.get("in_reply_to_user_id") == null)
-					return;
-
-				System.out.println("replied in");
-				String inReplyID = jsonObject.get("in_reply_to_user_id").toString();
-				preparedStatement.setLong(2, (Long) jsonObject.get("in_reply_to_user_id"));
-				preparedStatement.setString(3, "REPLIED");
-
+				if (jsonObject.get("in_reply_to_user_id") != null)
+				{
+					System.out.println("replied in");
+					String inReplyID = jsonObject.get("in_reply_to_user_id").toString();
+					preparedStatement.setLong(2, (Long) jsonObject.get("in_reply_to_user_id"));
+					preparedStatement.setString(3, "REPLIED");
+				}
 				break;
 			case MENTIONED:
 				preparedStatement.setString(3, "MENTIONED");
@@ -792,15 +796,24 @@ public class ConnectionRDBMS {
 			String sql = "";
 			if (total == -1)
 				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
-						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at," +//DATE_FORMAT(created_at, \"%Y-%l-%d %H:%m:%s\")  AS created_at," + 
-						"source,retweet_count,retweeted,favorite_count,tweet,idsearch "
-						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at ;";
+						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at," + // DATE_FORMAT(created_at,
+																										// \"%Y-%l-%d
+																										// %H:%m:%s\")
+																										// AS
+																										// created_at,"
+																										// +
+						"source,retweet_count,retweeted,favorite_count,tweet,idsearch " + "FROM tweet WHERE idsearch = "
+						+ idSearch + " ORDER BY created_at ;";
 			else
 				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
-						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at," + //DATE_FORMAT(created_at, \"%Y-%l-%d %H:%m:%s\")  AS created_at," + 
-						"source,retweet_count,retweeted,favorite_count,tweet,idsearch "
-						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at desc LIMIT "
-						+ total + ";";
+						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at," + // DATE_FORMAT(created_at,
+																										// \"%Y-%l-%d
+																										// %H:%m:%s\")
+																										// AS
+																										// created_at,"
+																										// +
+						"source,retweet_count,retweeted,favorite_count,tweet,idsearch " + "FROM tweet WHERE idsearch = "
+						+ idSearch + " ORDER BY created_at desc LIMIT " + total + ";";
 
 			System.out.println(sql);
 			preparedStatement = connect.prepareStatement(sql);
@@ -823,11 +836,11 @@ public class ConnectionRDBMS {
 				tweet.setUsr_id(rs.getLong("usr_id"));
 				tweet.setLocation(rs.getString("location"));
 				System.out.println("date: " + rs.getTimestamp("created_at").toString());
-				String dateString= rs.getTimestamp("created_at").toString();
+				String dateString = rs.getTimestamp("created_at").toString();
 				DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				java.util.Date date = dateFormat.parse(dateString);
 				System.out.println(dateFormat.format(date));
-				
+
 				tweet.setCreated_at(date);
 				tweet.setSource(rs.getString("Source"));
 				tweet.setRetweet_count(rs.getLong("retweet_count"));
@@ -835,7 +848,7 @@ public class ConnectionRDBMS {
 				tweet.setFavorite_count(rs.getLong("favorite_count"));
 				tweet.setTweet(rs.getString("tweet"));
 				tweet.setIdsearch(rs.getInt("idsearch"));
-				
+
 				tweetsList.add(tweet);
 
 			}
@@ -849,38 +862,37 @@ public class ConnectionRDBMS {
 
 	public ArrayList<User> getUsersBySearch(int idSearch, int total) {
 		ArrayList<User> usersList = new ArrayList<User>();
-		
+
 		try {
 			connect();
 			String sql = "";
 			if (total == -1)
-				sql = "SELECT n.label as sourcename,source ,n.count as sourceCount, n2.label as targetname, target,n2.count as targetCount,weight  " + 
-						"FROM edges e " + 
-						"JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source " + 
-						"LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id " + 
-						"WHERE e.idsearch = " + idSearch + ";";
+				sql = "SELECT n.label as sourcename,source ,n.count as sourceCount, n2.label as targetname, target,n2.count as targetCount,weight  "
+						+ "FROM edges e " + "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
+						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
+						+ "WHERE e.idsearch = " + idSearch + ";";
 			else
-				sql = "SELECT n.label as sourcename,source ,n.count as sourceCount, n2.label as targetname, target,n2.count as targetCount,weight  " + 
-						"FROM edges e " + 
-						"JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source " + 
-						"LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id " + 
-						"WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
+				sql = "SELECT n.label as sourcename,source ,n.count as sourceCount, n2.label as targetname, target,n2.count as targetCount,weight  "
+						+ "FROM edges e " + "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
+						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
+						+ "WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
 
 			System.out.println(sql);
 			preparedStatement = connect.prepareStatement(sql);
 			ResultSet rs = preparedStatement.executeQuery();
 
 			while (rs.next()) {
-				/*User user = new User();
-				user.setId(rs.getLong("id"));
-				user.setId_str(rs.getString("id_str"));*/
+				/*
+				 * User user = new User(); user.setId(rs.getLong("id"));
+				 * user.setId_str(rs.getString("id_str"));
+				 */
 			}
-			
+
 		} catch (Exception ex) {
 			System.out.println("ERROR getTweets: " + ex.getMessage());
 			ex.printStackTrace();
 		}
-		
+
 		return usersList;
 	}
 }

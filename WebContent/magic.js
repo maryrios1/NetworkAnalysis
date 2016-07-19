@@ -32,7 +32,8 @@ $(document).ready(function() {
         var formData = {
             'keywords'              : $('input[name=keywords]').val(),
             'SearchName'            : $('input[name=SearchName]').val(),
-            'NameTable'             : $('input[name=NameTable]').val()
+            'NameTable'             : $('input[name=NameTable]').val(),
+            'SearchType'             : $('#SearchType option:selected').val()
         };
 
         //if (value === 'StartSearch') { 
@@ -226,10 +227,24 @@ $(document).ready(function() {
 						if(value['keepsearching']==true) 
 							status = "STOP"; 
 						 else 
-							 status = "RESTART"; 
+							 status = "RESTART";
+						
+						var selection = ""
+						if(value['type']=='SEARCH')
+							selection = "<option value='STREAM' id='STREAM'>Stream</option>" +
+										"<option value='SEARCH' id='SEARCH' selected='selected'>Search</option> ";
+						else
+							selection = "<option value='STREAM' id='STREAM' selected='selected'>Stream</option>" +
+										"<option value='SEARCH' id='SEARCH'>Search</option> ";
+						
 						//Search Name, Words,,Start Search, End Search,	Last Update,Type,Keep Searching,Export
-						var rowNew = $("<tr><td></td><td></td><td></td><td></td><td></td><td></td><td>" +
-								"<input type='button' onclick='stopRestartSearch(this," + value['IDSearch'] + ")' value='" + status +"' id='btn_" + value['IDSearch'] + "' /></td>" +
+						var rowNew = $("<tr><td></td><td></td><td></td><td></td><td></td>" + 
+								"<td><div class='select-wrapper'>" +
+									"<select name='SearchType_" + value['IDSearch'] + "' id='SearchType_" + value['IDSearch'] + "'> " +
+									selection +
+									"</select> " +
+								"</div></td>" +
+								"<td><input type='button' onclick='stopRestartSearch(this," + value['IDSearch'] + ")' value='" + status +"' id='btn_" + value['IDSearch'] + "' /></td>" +
 								"<td><input type='button' onclick='exportToExcel(this," + value['IDSearch'] + ")' value='Export' id='btnExport_" + value['IDSearch'] + "' /></td></tr>");
 						rowNew.children().eq(0).text(value['searchname']); 
 						//rowNew.children().eq(1).text(value['iduser']);
@@ -237,7 +252,8 @@ $(document).ready(function() {
 						rowNew.children().eq(2).text(value['startsearch']); 
 						rowNew.children().eq(3).text(value['endsearch']); 
 						rowNew.children().eq(4).text(value['lastupdate']); 
-						rowNew.children().eq(5).text(value['type']); 
+						//rowNew.children().eq(5).find("option[value='"+ value['type'] +"']" ).attr('selected','selected');
+						//rowNew.children().eq(5).find("#SearchType_" + value['IDSearch'] + " option[value='"+ value['type'] +"']").attr('selected', 'selected'); 
 						//rowNew.children().eq(6).text(value['keepsearching']);						
 						rowNew.appendTo(table1);						
 					});
@@ -270,7 +286,7 @@ function stopRestartSearch(btn,id){
 	if(btn.value == 'RESTART'){
 		formData = {
 	            'typeAction'    : 'RESTART',
-	            'type'          : 'SEARCH',
+	            'type'          : $('#SearchType_' + id + ' option:selected').val(),
 	            'relation'      : 'REPLIED',
 	            'idSearch'		: id
 	        };

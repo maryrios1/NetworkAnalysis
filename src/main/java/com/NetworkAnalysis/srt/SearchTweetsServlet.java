@@ -7,6 +7,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Path;
 /*
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -20,6 +21,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.NetworkAnalysis.rsc.GlobalVariablesInterface;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -36,10 +38,11 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 				@WebInitParam(name = "keywords", value = "", description = "Words to look for")
 		})*/
 @WebServlet("/SearchTweetsServlet")
-public class SearchTweetsServlet extends HttpServlet {
+public class SearchTweetsServlet extends HttpServlet implements GlobalVariablesInterface {
 	private static final long serialVersionUID = 1L;
 	String SEARCH_NAME;
-	static final String REST_URI = "http://localhost:8080/NetworkAnalysis/";
+	String SEARCH_TYPE;
+	static final String REST_URI = global.getConnection();
 	static final String STREAM_TWEETS= "/StreamTweets/";
 	static final String SEARCH_TWEETS = "/SearchTweets/";
        
@@ -85,8 +88,12 @@ public class SearchTweetsServlet extends HttpServlet {
         
 		String keywords = request.getParameter("keywords");
         SEARCH_NAME = request.getParameter("SearchName");
+        SEARCH_TYPE = request.getParameter("SearchType");
         System.out.println("keywords:" + keywords);
         System.out.println("SearchName: " + SEARCH_NAME);
+        System.out.println("SearchType: " + SEARCH_TYPE);
+        
+        
         /*
         Client client = ClientBuilder.newClient();
         WebTarget addService = client.target("REST_URI").path("rest").path(SEARCH_TWEETS + keywords);
@@ -101,7 +108,11 @@ public class SearchTweetsServlet extends HttpServlet {
 		Client client = Client.create(config);
 		WebResource service = client.resource(REST_URI);
 		String asd = REST_URI + "rest" + SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1";
-		WebResource addService = service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1");
+		WebResource addService;
+		if (SEARCH_TYPE.equals("Search"))
+			addService = service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1");
+		else
+			addService = service.path("rest").path(STREAM_TWEETS + keywords + "/REPLIED/" + SEARCH_NAME+ "/1");		
 		
 		System.out.println("GetTweets Response: " + getResponse(addService));
 		/*JSONParser parser = new JSONParser();

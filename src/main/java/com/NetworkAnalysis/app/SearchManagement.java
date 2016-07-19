@@ -72,6 +72,7 @@ public class SearchManagement {
 			TwitterRequests tweet = new TwitterRequests();
 			SearchType searchType = SearchType.valueOf(type);
 			dbConnection = new ConnectionRDBMS();
+			System.out.println("RestartRequest type: " + type);
 
 			Search search = dbConnection.getRecordSearch(idSearch);
 			if(search.getMessage().contains("ERROR")){
@@ -84,7 +85,8 @@ public class SearchManagement {
 						Status.RESTART, idSearch);
 				break;
 			case STREAM:
-				msg = tweet.startStreamTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(), Status.RESTART, idSearch);
+				msg = tweet.startStreamTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(), 
+						Status.RESTART, idSearch);
 				break;
 			default:
 				break;

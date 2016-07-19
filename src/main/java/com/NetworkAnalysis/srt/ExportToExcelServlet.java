@@ -19,6 +19,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.NetworkAnalysis.rsc.ExcelUtils;
+import com.NetworkAnalysis.rsc.GlobalVariablesInterface;
 import com.NetworkAnalysis.rsc.Tweet;
 import com.google.gson.Gson;
 import com.sun.jersey.api.client.Client;
@@ -51,8 +52,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  * Servlet implementation class ExportToExcelServlet
  */
 @WebServlet(description = "Export to excel the information requested", urlPatterns = { "/ExportToExcelServlet" })
-public class ExportToExcelServlet extends HttpServlet {
-	static final String REST_URI = "http://localhost:8080/NetworkAnalysis/";
+public class ExportToExcelServlet extends HttpServlet implements GlobalVariablesInterface {
+	static final String REST_URI = global.getConnection();
 	static final String STREAM_TWEETS= "/StreamTweets/";
 	static final String SEARCH_TWEETS = "/SearchTweets/";
 	

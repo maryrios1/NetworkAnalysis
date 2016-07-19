@@ -72,18 +72,8 @@
 						Escribe las palabras clave separadas por espacio.<br>
 						Ejemplo: "Facebook" "fb" "face"
 					</p> -->
-					</br>
-					Tipo de búsqueda
-					<div class="12u$">
-						<div class="select-wrapper">
-							<select name="SearchType" id="SearchType">
-								<option value="Stream">Stream</option>
-								<option value="Search">Search</option>
-							</select>
-						</div>
-					</div>
-					</br>
-					Palabra clave <br> <input type="text" name="keywords">
+					<input type="select">
+					Palabras clave: <br> <input type="text" name="keywords">
 					<br id="raro"> <br> <input type="submit"
 						value="Start Search" id="StartSearch">
 					<!-- 
@@ -212,7 +202,7 @@
 	</section>
 
 	<!-- Five -->
-	<!--
+	
 			<section id="five" class="main style1">
 				<div class="container">
 					<header class="major special">
@@ -324,7 +314,7 @@ print 'It took ' + i + ' iterations to sort the deck.';</code></pre>
 							</div>
 						</div>
 					</section>
---><!--  
+  
 					<section>
 						<h4>Table</h4>
 						<h5>Default</h5>
@@ -419,7 +409,7 @@ print 'It took ' + i + ' iterations to sort the deck.';</code></pre>
 							</table>
 						</div>
 					</section>
---><!--  
+  
 					<section>
 						<h4>Buttons</h4>
 						<ul class="actions">
@@ -529,7 +519,7 @@ print 'It took ' + i + ' iterations to sort the deck.';</code></pre>
 
 				</div>
 			</section>
-		-->
+		
 
 	<!-- Footer -->
 	<section id="footer">

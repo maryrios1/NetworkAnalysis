@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
+import com.NetworkAnalysis.rsc.GlobalVariablesInterface;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -19,9 +20,9 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
  */
 @WebServlet("/RestartStopSearchServlet")
 //@WebServlet(description = "Start and Stop search", urlPatterns = { "/RestartStopSearchServlet" })
-public class RestartStopSearchServlet extends HttpServlet {
+public class RestartStopSearchServlet extends HttpServlet implements GlobalVariablesInterface{
 	private static final long serialVersionUID = 1L;
-	static final String REST_URI = "http://localhost:8080/NetworkAnalysis/";
+	static final String REST_URI = global.getConnection();
 	String idSearch = "";
 
 	/**
@@ -51,6 +52,7 @@ public class RestartStopSearchServlet extends HttpServlet {
 		String relation = request.getParameter("relation");
 		System.out.println("keywords:" + typeAction);
 		System.out.println("idSearch: " + idSearch);
+		System.out.println("type: " + type);
 		// "/StopRequest/{idSearch}"
 		// "/RestartRequest/{idSearch}/{type}/{relation}"
 		String url = "";
