@@ -263,46 +263,85 @@ public class ConnectionRDBMS {
 			jsonObject = (JSONObject) obj;
 			String userString = "";
 			JSONObject jOUser = null;
+			JSONObject jOUser2 = null;
 
 			preparedStatement = connect.prepareStatement(
 					"INSERT INTO  edges (source,target,name,idsearch) VALUES (?, ?, ?,? ) ON DUPLICATE KEY UPDATE weight=weight+1;");
-
-			// Create relationship
-			switch (relation) {
-			case RETWEETED:
-				//retweeted_status
-				if(jsonObject.get("retweeted_status") != null)
-				{
-					it has to break!!! check the correct way to add retweeted tweets
-					System.out.println("RETWEETED in");
-					preparedStatement.setString(3, "RETWEETED");
-				}
-				break;
-			case REPLIED:
-				if (jsonObject.get("in_reply_to_user_id") != null)
-				{
-					System.out.println("replied in");
-					String inReplyID = jsonObject.get("in_reply_to_user_id").toString();
-					preparedStatement.setLong(2, (Long) jsonObject.get("in_reply_to_user_id"));
-					preparedStatement.setString(3, "REPLIED");
-				}
-				break;
-			case MENTIONED:
-				preparedStatement.setString(3, "MENTIONED");
-				break;
-			case CONTRIBUTOR:
-				preparedStatement.setString(3, "CONTRIBUTOR");
-				break;
-			default:
-				break;
-			}
 
 			userString = jsonObject.get("user").toString();
 			jOUser = (JSONObject) parser.parse(userString);
 			preparedStatement.setLong(1, (Long) jOUser.get("id"));
 			preparedStatement.setInt(4, idsearch);
 
-			status = executeStatement(preparedStatement);
+			// Create relationship
+			/*switch (relation) {
+			case RETWEETED:*/
+				// retweeted_status
+				if (jsonObject.get("retweeted_status") != null) {
+					String retweetString = jsonObject.get("retweeted_status").toString();
+					JSONObject jORetweet = (JSONObject) parser.parse(retweetString);
+
+					String userRetweetString = jORetweet.get("user").toString();
+					jOUser2 = (JSONObject) parser.parse(userRetweetString);
+
+					// tweets
+					System.out.println("RETWEETED in");
+					preparedStatement.setLong(2, (Long) jOUser2.get("id"));
+					preparedStatement.setString(3, "RETWEETED");
+					status = executeStatement(preparedStatement);
+
+				}
+				/*break;
+			case REPLIED:*/
+				if (jsonObject.get("in_reply_to_user_id") != null) {
+					System.out.println("replied in");
+					preparedStatement.setLong(2, (Long) jsonObject.get("in_reply_to_user_id"));
+					preparedStatement.setString(3, "REPLIED");
+					status = executeStatement(preparedStatement);
+
+				}
+				/*break;
+			case MENTIONED:*/
+				/*
+				 * "entities":{ "hashtags":[
+				 * {"text":"TeamTrevi","indices":[83,93]}], "urls":[],
+				 * "user_mentions":[ {"screen_name":"GloriaTrevi",
+				 * "name":"GloriaTrevi", "id":86119466, "id_str":"86119466",
+				 * "indices":[0,12]}, {"screen_name":"LaVozMexico", "name":
+				 * "La Voz... M\u00e9xico", "id":310982691,
+				 * "id_str":"310982691", "indices":[70,82]}],
+				 */
+
+				String entitiesString = jsonObject.get("entities").toString();
+				JSONObject jOEntities = (JSONObject) parser.parse(entitiesString);
+
+				if (jsonObject.get("user_mentions") != null) {
+					String userMentionesString = jOEntities.get("user_mentions").toString();
+					JSONArray jAUsers = (JSONArray) parser.parse(userMentionesString);
+
+					String tempHash = "";
+					System.out.println("Mentioned in");
+
+					for (int i = 0; i < jAUsers.size(); i++) {
+						String tempUserMentionId = ((JSONObject) jAUsers.get(i)).get("id").toString();
+
+						preparedStatement.setLong(2, (Long) ((JSONObject) jAUsers.get(i)).get("id"));
+						preparedStatement.setString(3, "MENTIONED");
+						status = executeStatement(preparedStatement);
+					}
+
+				}
+
+				/*break;
+			case CONTRIBUTOR:*/
+				/*System.out.println("Contribuitor in");
+				preparedStatement.setString(3, "CONTRIBUTOR");
+				status = executeStatement(preparedStatement);*/
+				/*break;
+			default:
+				break;
+			}*/
+
 		} catch (Exception ex) {
 			System.out.println("ERROR EDGE_DB: " + ex.getMessage());
 			throw ex;
@@ -802,7 +841,7 @@ public class ConnectionRDBMS {
 																										// AS
 																										// created_at,"
 																										// +
-						"source,retweet_count,retweeted,favorite_count,tweet,idsearch " + "FROM tweet WHERE idsearch = "
+				"source,retweet_count,retweeted,favorite_count,tweet,idsearch " + "FROM tweet WHERE idsearch = "
 						+ idSearch + " ORDER BY created_at ;";
 			else
 				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
@@ -812,7 +851,7 @@ public class ConnectionRDBMS {
 																										// AS
 																										// created_at,"
 																										// +
-						"source,retweet_count,retweeted,favorite_count,tweet,idsearch " + "FROM tweet WHERE idsearch = "
+				"source,retweet_count,retweeted,favorite_count,tweet,idsearch " + "FROM tweet WHERE idsearch = "
 						+ idSearch + " ORDER BY created_at desc LIMIT " + total + ";";
 
 			System.out.println(sql);
