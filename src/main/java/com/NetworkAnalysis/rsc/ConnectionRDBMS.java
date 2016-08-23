@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -150,6 +151,7 @@ public class ConnectionRDBMS {
 		JSONObject jsonObject;
 		String userString = "";
 		JSONObject jOUser = null;
+		JSONObject jOUser2 = null;
 		JSONObject jOTemp = null;
 		String tempString = "";
 
@@ -159,8 +161,9 @@ public class ConnectionRDBMS {
 
 			preparedStatement = connect.prepareStatement(
 					"INSERT INTO  tweet (id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
-							+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,source,retweet_count,retweeted,favorite_count,tweet,idsearch) "
-							+ "VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? ) ;");
+							+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,source,retweet_count,retweeted,favorite_count,tweet,idsearch,"
+							+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names) "
+							+ "VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? ) ;");
 
 			userString = jsonObject.get("user").toString();
 			jOUser = (JSONObject) parser.parse(userString);
@@ -208,10 +211,10 @@ public class ConnectionRDBMS {
 			}
 
 			// entities->user_mentiones->id,id_str,screen_name
-			if (jsonObject.get("user_mentions") == null)
+			if (jOTemp.get("user_mentions") == null)
 				preparedStatement.setNull(11, 0);
 			else
-				preparedStatement.setString(11, jsonObject.get("user_mentions").toString());
+				preparedStatement.setString(11, jOTemp.get("user_mentions").toString());
 
 			preparedStatement.setString(12, jOUser.get("id_str").toString());
 			preparedStatement.setLong(13, (Long) jOUser.get("id"));
@@ -233,6 +236,55 @@ public class ConnectionRDBMS {
 			preparedStatement.setLong(19, (Long) jsonObject.get("favorite_count"));
 			preparedStatement.setString(20, jsonObject.toString());
 			preparedStatement.setInt(21, idsearch);
+			// added columns
+			System.out.println("new columns");
+
+			if (jsonObject.get("retweeted_status") != null) {
+				System.out.println("new retweeted_status");
+				String retweetString = jsonObject.get("retweeted_status").toString();
+				JSONObject jORetweet = (JSONObject) parser.parse(retweetString);
+
+				String userRetweetString = jORetweet.get("user").toString();
+				jOUser2 = (JSONObject) parser.parse(userRetweetString);
+				preparedStatement.setLong(22, (Long) jOUser2.get("id"));
+				preparedStatement.setString(23, jOUser2.get("screen_name").toString());
+
+			} else {
+				preparedStatement.setNull(22, 0);
+				preparedStatement.setNull(23, 0);
+			}
+
+			String entitiesString = jsonObject.get("entities").toString();
+			JSONObject jOEntities = (JSONObject) parser.parse(entitiesString);
+
+			if (jOEntities.get("user_mentions") != null) {
+				System.out.println("new user_mentions");
+				String idsTemp = "";
+				String screennamesTemp = "";
+				String userMentionesString = jOEntities.get("user_mentions").toString();
+				JSONArray jAUsers = (JSONArray) parser.parse(userMentionesString);
+
+				for (int i = 0; i < jAUsers.size(); i++) {
+					String tempUserMentionId = ((JSONObject) jAUsers.get(i)).get("id").toString();
+
+					idsTemp += ((JSONObject) jAUsers.get(i)).get("id").toString() + ",";
+					screennamesTemp += ((JSONObject) jAUsers.get(i)).get("screen_name").toString() + ",";
+				}
+
+				System.out.println("temp values :" + idsTemp + " --- " + screennamesTemp);
+				if (idsTemp.length() > 0 && screennamesTemp.length() > 0) {
+					idsTemp = idsTemp.substring(0, idsTemp.length() - 1);
+					screennamesTemp = screennamesTemp.substring(0, screennamesTemp.length() - 1);
+					preparedStatement.setString(24, idsTemp);
+					preparedStatement.setString(25, screennamesTemp);
+				} else {
+					preparedStatement.setNull(24, 0);
+					preparedStatement.setNull(25, 0);
+				}
+			} else {
+				preparedStatement.setNull(24, 0);
+				preparedStatement.setNull(25, 0);
+			}
 
 			status = executeStatement(preparedStatement);
 
@@ -274,73 +326,68 @@ public class ConnectionRDBMS {
 			preparedStatement.setInt(4, idsearch);
 
 			// Create relationship
-			/*switch (relation) {
-			case RETWEETED:*/
-				// retweeted_status
-				if (jsonObject.get("retweeted_status") != null) {
-					String retweetString = jsonObject.get("retweeted_status").toString();
-					JSONObject jORetweet = (JSONObject) parser.parse(retweetString);
 
-					String userRetweetString = jORetweet.get("user").toString();
-					jOUser2 = (JSONObject) parser.parse(userRetweetString);
+			// This tweet was retweeted from
+			if (jsonObject.get("retweeted_status") != null) {
+				String retweetString = jsonObject.get("retweeted_status").toString();
+				JSONObject jORetweet = (JSONObject) parser.parse(retweetString);
 
-					// tweets
-					System.out.println("RETWEETED in");
-					preparedStatement.setLong(2, (Long) jOUser2.get("id"));
-					preparedStatement.setString(3, "RETWEETED");
+				String userRetweetString = jORetweet.get("user").toString();
+				jOUser2 = (JSONObject) parser.parse(userRetweetString);
+
+				// tweets
+				System.out.println("RETWEETED in");
+				preparedStatement.setLong(2, (Long) jOUser2.get("id"));
+				preparedStatement.setString(3, "RETWEETED");
+				status = executeStatement(preparedStatement);
+
+			}
+
+			// This tweet was in reply to the user
+
+			if (jsonObject.get("in_reply_to_user_id") != null) {
+				System.out.println("replied in");
+				preparedStatement.setLong(2, (Long) jsonObject.get("in_reply_to_user_id"));
+				preparedStatement.setString(3, "REPLIED");
+				status = executeStatement(preparedStatement);
+
+			}
+
+			// Users mentioned in the tweet
+
+			String entitiesString = jsonObject.get("entities").toString();
+			JSONObject jOEntities = (JSONObject) parser.parse(entitiesString);
+
+			if (jOEntities.get("user_mentions") != null) {
+				String userMentionesString = jOEntities.get("user_mentions").toString();
+				JSONArray jAUsers = (JSONArray) parser.parse(userMentionesString);
+
+				String tempHash = "";
+				System.out.print("Mentioned in ");
+
+				for (int i = 0; i < jAUsers.size(); i++) {
+					String tempUserMentionId = ((JSONObject) jAUsers.get(i)).get("id").toString();
+
+					preparedStatement.setLong(2, (Long) ((JSONObject) jAUsers.get(i)).get("id"));
+					preparedStatement.setString(3, "MENTIONED");
 					status = executeStatement(preparedStatement);
-
+					System.out.print(i + ",");
 				}
-				/*break;
-			case REPLIED:*/
-				if (jsonObject.get("in_reply_to_user_id") != null) {
-					System.out.println("replied in");
-					preparedStatement.setLong(2, (Long) jsonObject.get("in_reply_to_user_id"));
-					preparedStatement.setString(3, "REPLIED");
-					status = executeStatement(preparedStatement);
+				System.out.println("");
 
-				}
-				/*break;
-			case MENTIONED:*/
-				/*
-				 * "entities":{ "hashtags":[
-				 * {"text":"TeamTrevi","indices":[83,93]}], "urls":[],
-				 * "user_mentions":[ {"screen_name":"GloriaTrevi",
-				 * "name":"GloriaTrevi", "id":86119466, "id_str":"86119466",
-				 * "indices":[0,12]}, {"screen_name":"LaVozMexico", "name":
-				 * "La Voz... M\u00e9xico", "id":310982691,
-				 * "id_str":"310982691", "indices":[70,82]}],
-				 */
+			}
 
-				String entitiesString = jsonObject.get("entities").toString();
-				JSONObject jOEntities = (JSONObject) parser.parse(entitiesString);
-
-				if (jsonObject.get("user_mentions") != null) {
-					String userMentionesString = jOEntities.get("user_mentions").toString();
-					JSONArray jAUsers = (JSONArray) parser.parse(userMentionesString);
-
-					String tempHash = "";
-					System.out.println("Mentioned in");
-
-					for (int i = 0; i < jAUsers.size(); i++) {
-						String tempUserMentionId = ((JSONObject) jAUsers.get(i)).get("id").toString();
-
-						preparedStatement.setLong(2, (Long) ((JSONObject) jAUsers.get(i)).get("id"));
-						preparedStatement.setString(3, "MENTIONED");
-						status = executeStatement(preparedStatement);
-					}
-
-				}
-
-				/*break;
-			case CONTRIBUTOR:*/
-				/*System.out.println("Contribuitor in");
-				preparedStatement.setString(3, "CONTRIBUTOR");
-				status = executeStatement(preparedStatement);*/
-				/*break;
-			default:
-				break;
-			}*/
+			/*
+			 * break; case CONTRIBUTOR:
+			 */
+			/*
+			 * System.out.println("Contribuitor in");
+			 * preparedStatement.setString(3, "CONTRIBUTOR"); status =
+			 * executeStatement(preparedStatement);
+			 */
+			/*
+			 * break; default: break; }
+			 */
 
 		} catch (Exception ex) {
 			System.out.println("ERROR EDGE_DB: " + ex.getMessage());
@@ -371,6 +418,7 @@ public class ConnectionRDBMS {
 			jsonObject = (JSONObject) obj;
 			String userString = "";
 			JSONObject jOUser = null;
+			JSONObject jOUser2 = null;
 
 			preparedStatement = connect.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) "
 					+ "VALUES (?, ?, ?,? ) ON DUPLICATE KEY UPDATE count=count+1;");
@@ -384,32 +432,59 @@ public class ConnectionRDBMS {
 			preparedStatement.setInt(4, idsearch);
 			status = executeStatement(preparedStatement);
 
-			switch (relation) {
-			case RETWEETED:
+			// RETWEETED:
+			if (jsonObject.get("retweeted_status") != null) {
+				String retweetString = jsonObject.get("retweeted_status").toString();
+				JSONObject jORetweet = (JSONObject) parser.parse(retweetString);
 
-				break;
-			case REPLIED:
+				String userRetweetString = jORetweet.get("user").toString();
+				jOUser2 = (JSONObject) parser.parse(userRetweetString);
 
-				if (jsonObject.get("in_reply_to_user_id") != null
-						&& jsonObject.get("in_reply_to_screen_name") != null) {
-					System.out.println("REPLIED!: " + jsonObject.get("in_reply_to_screen_name").toString());
+				preparedStatement = connect
+						.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) VALUES (?, ?, ?,? )");
+				preparedStatement.setLong(1, (Long) jOUser2.get("id"));
+				preparedStatement.setString(2, jOUser2.get("screen_name").toString());
+				preparedStatement.setString(3, jOUser2.get("profile_image_url_https").toString());
+				preparedStatement.setInt(4, idsearch);
+				status = executeStatement(preparedStatement);
+
+			}
+
+			// REPLIED
+			if (jsonObject.get("in_reply_to_user_id") != null && jsonObject.get("in_reply_to_screen_name") != null) {
+				System.out.println("REPLIED!: " + jsonObject.get("in_reply_to_screen_name").toString());
+
+				preparedStatement = connect
+						.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) VALUES (?, ?, ?,? )");
+				preparedStatement.setLong(1, (Long) jsonObject.get("in_reply_to_user_id"));
+				preparedStatement.setString(2, jsonObject.get("in_reply_to_screen_name").toString());
+				preparedStatement.setString(3, "");
+				preparedStatement.setInt(4, idsearch);
+				status = executeStatement(preparedStatement);
+			}
+
+			// MENTIONED
+			String entitiesString = jsonObject.get("entities").toString();
+			JSONObject jOEntities = (JSONObject) parser.parse(entitiesString);
+
+			if (jOEntities.get("user_mentions") != null) {
+				String userMentionesString = jOEntities.get("user_mentions").toString();
+				JSONArray jAUsers = (JSONArray) parser.parse(userMentionesString);
+
+				for (int i = 0; i < jAUsers.size(); i++) {
+					String tempUserMentionId = ((JSONObject) jAUsers.get(i)).get("id").toString();
+
 					preparedStatement = connect
 							.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) VALUES (?, ?, ?,? )");
-					preparedStatement.setLong(1, (Long) jsonObject.get("in_reply_to_user_id"));
-					preparedStatement.setString(2, jsonObject.get("in_reply_to_screen_name").toString());
+					preparedStatement.setLong(1, (Long) ((JSONObject) jAUsers.get(i)).get("id"));
+					preparedStatement.setString(2, ((JSONObject) jAUsers.get(i)).get("screen_name").toString());
 					preparedStatement.setString(3, "");
 					preparedStatement.setInt(4, idsearch);
 					status = executeStatement(preparedStatement);
 				}
-
-				break;
-			case MENTIONED:
-				break;
-			case CONTRIBUTOR:
-				break;
-			default:
-				break;
 			}
+
+			// CONTRIBUTOR
 
 		} catch (Exception ex) {
 			System.out.println("ERROR NODE_DB: " + ex.getMessage());
@@ -828,110 +903,280 @@ public class ConnectionRDBMS {
 
 	}
 
-	public ArrayList<Tweet> getTweetBySearch(int idSearch, int total) {
-		ArrayList<Tweet> tweetsList = new ArrayList<Tweet>();
+	public ResultSet getTweetBySearch(int idSearch, int total) {
+		int i = 0;
 		try {
 			connect();
 			String sql = "";
 			if (total == -1)
 				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
-						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at," + // DATE_FORMAT(created_at,
-																										// \"%Y-%l-%d
-																										// %H:%m:%s\")
-																										// AS
-																										// created_at,"
-																										// +
-				"source,retweet_count,retweeted,favorite_count,tweet,idsearch " + "FROM tweet WHERE idsearch = "
-						+ idSearch + " ORDER BY created_at ;";
+						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,"
+						+ "source,retweet_count,retweeted,favorite_count,tweet,idsearch, "
+						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
+						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at ;";
 			else
 				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
-						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at," + // DATE_FORMAT(created_at,
-																										// \"%Y-%l-%d
-																										// %H:%m:%s\")
-																										// AS
-																										// created_at,"
-																										// +
-				"source,retweet_count,retweeted,favorite_count,tweet,idsearch " + "FROM tweet WHERE idsearch = "
-						+ idSearch + " ORDER BY created_at desc LIMIT " + total + ";";
+						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,"
+						+ "source,retweet_count,retweeted,favorite_count,tweet,idsearch, "
+						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
+						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at desc LIMIT " + total + ";";
 
 			System.out.println(sql);
-			preparedStatement = connect.prepareStatement(sql);
-			ResultSet rs = preparedStatement.executeQuery();
+			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+					java.sql.ResultSet.CONCUR_READ_ONLY);
+			// preparedStatement.setFetchSize(Integer.MIN_VALUE);
+			stmt.setFetchSize(Integer.MIN_VALUE);
 
-			while (rs.next()) {
-				Tweet tweet = new Tweet();
-				tweet.setId(rs.getLong("id"));
-				tweet.setId_str(rs.getString("id_str"));
-				tweet.setScreen_name(rs.getString("screen_name"));
-				tweet.setIn_reply_to_user_id(rs.getLong("in_reply_to_user_id"));
-				tweet.setIn_reply_to_screen_name(rs.getString("in_reply_to_screen_name"));
-				tweet.setText(rs.getString("text"));
-				tweet.setLang(rs.getString("lang"));
-				tweet.setPossibly_sensitive(rs.getBoolean("possibly_sensitive"));
-				tweet.setTruncated(rs.getBoolean("truncated"));
-				tweet.setHashtags(rs.getString("hashtags"));
-				tweet.setUser_mentions(rs.getString("user_mentions"));
-				tweet.setUsr_id_str(rs.getString("usr_id_str"));
-				tweet.setUsr_id(rs.getLong("usr_id"));
-				tweet.setLocation(rs.getString("location"));
-				System.out.println("date: " + rs.getTimestamp("created_at").toString());
-				String dateString = rs.getTimestamp("created_at").toString();
-				DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				java.util.Date date = dateFormat.parse(dateString);
-				System.out.println(dateFormat.format(date));
+			// preparedStatement = connect.prepareStatement(sql);
 
-				tweet.setCreated_at(date);
-				tweet.setSource(rs.getString("Source"));
-				tweet.setRetweet_count(rs.getLong("retweet_count"));
-				tweet.setRetweeted(rs.getBoolean("retweeted"));
-				tweet.setFavorite_count(rs.getLong("favorite_count"));
-				tweet.setTweet(rs.getString("tweet"));
-				tweet.setIdsearch(rs.getInt("idsearch"));
-
-				tweetsList.add(tweet);
-
-			}
+			ResultSet rs = stmt.executeQuery(sql); // reparedStatement.executeQuery();
+			System.out.println("Result set!!");
+			return rs;
+			
 		} catch (Exception ex) {
-			System.out.println("ERROR getTweets: " + ex.getMessage());
+			System.out.println("ERROR getTweets(" + i + "): " + ex.getMessage());
 			ex.printStackTrace();
+			return null;
 		}
-		return tweetsList;
 
 	}
 
-	public ArrayList<User> getUsersBySearch(int idSearch, int total) {
-		ArrayList<User> usersList = new ArrayList<User>();
+	public ArrayList<Tweet> getTweetBySearchJson(int idSearch, int total) {
+		ArrayList<Tweet> tweetsList = new ArrayList<Tweet>();
+		int i = 0;
+		try {
+			connect();
+			String sql = "";
+			if (total == -1)
+				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
+						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,"
+						+ "source,retweet_count,retweeted,favorite_count,tweet,idsearch, "
+						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
+						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at ;";
+			else
+				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
+						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,"
+						+ "source,retweet_count,retweeted,favorite_count,tweet,idsearch, "
+						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
+						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at desc LIMIT " + total + ";";
+
+			System.out.println(sql);
+			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+					java.sql.ResultSet.CONCUR_READ_ONLY);
+			// preparedStatement.setFetchSize(Integer.MIN_VALUE);
+			stmt.setFetchSize(Integer.MIN_VALUE);
+
+			// preparedStatement = connect.prepareStatement(sql);
+
+			ResultSet rs = stmt.executeQuery(sql); // reparedStatement.executeQuery();
+			
+			  while (rs.next()) { 
+				  Tweet tweet = new Tweet();
+				  tweet.setId(rs.getLong("id"));
+				  tweet.setId_str(rs.getString("id_str"));
+				  tweet.setScreen_name(rs.getString("screen_name"));
+				  tweet.setIn_reply_to_user_id(rs.getLong("in_reply_to_user_id"));
+				  tweet.setIn_reply_to_screen_name(rs.getString("in_reply_to_screen_name")); 
+				  tweet.setText(rs.getString("text"));
+				  tweet.setLang(rs.getString("lang"));
+				  tweet.setPossibly_sensitive(rs.getBoolean("possibly_sensitive"));
+				  tweet.setTruncated(rs.getBoolean("truncated"));
+				  tweet.setHashtags(rs.getString("hashtags"));
+				  tweet.setUser_mentions(rs.getString("user_mentions"));
+				  tweet.setUsr_id_str(rs.getString("usr_id_str"));
+				  tweet.setUsr_id(rs.getLong("usr_id"));
+				  tweet.setLocation(rs.getString("location"));
+				  //System.out.println("date: " + rs.getTimestamp("created_at").toString()); 
+				  String dateString = rs.getTimestamp("created_at").toString(); 
+				  DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+				  java.util.Date date = dateFormat.parse(dateString);
+				  //System.out.println(dateFormat.format(date)); 
+				  i++;
+				  tweet.setCreated_at(date);
+				  tweet.setSource(rs.getString("Source"));
+				  tweet.setRetweet_count(rs.getLong("retweet_count"));
+				  tweet.setRetweeted(rs.getBoolean("retweeted"));
+				  tweet.setFavorite_count(rs.getLong("favorite_count"));
+				  tweet.setTweet(rs.getString("tweet"));
+				  tweet.setIdsearch(rs.getInt("idsearch"));
+				  //retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names
+				  tweet.setRetweeted_user_id(rs.getLong("retweeted_user_id"));
+				  tweet.setRetweeted_user_screen_name(rs.getString( "retweeted_user_screen_name"));
+				  tweet.setMentioned_users_ids(rs.getString("mentioned_users_ids")); 
+				  tweet.setMentioned_users_screen_names(rs.getString("mentioned_users_screen_names")); 
+				  tweetsList.add(tweet);			  
+			  }
+			 
+		} catch (Exception ex) {
+			System.out.println("ERROR getTweets(" + i + "): " + ex.getMessage());
+			ex.printStackTrace();
+		}
+
+		 return tweetsList;
+
+	}
+
+	
+	public ArrayList<Edge> getEdgesBySearchJson(int idSearch, int total) {
+		ArrayList<Edge> edgesList = new ArrayList<Edge>();
 
 		try {
 			connect();
 			String sql = "";
 			if (total == -1)
-				sql = "SELECT n.label as sourcename,source ,n.count as sourceCount, n2.label as targetname, target,n2.count as targetCount,weight  "
-						+ "FROM edges e " + "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
+				sql = "SELECT n.id as ID1, n.label as sourcename, target as ID2, "
+						+ "n2.label as targetname, weight, name  " 
+						+ "FROM edges e "
+						+ "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
 						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
 						+ "WHERE e.idsearch = " + idSearch + ";";
 			else
-				sql = "SELECT n.label as sourcename,source ,n.count as sourceCount, n2.label as targetname, target,n2.count as targetCount,weight  "
-						+ "FROM edges e " + "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
+				sql = "SELECT n.id as ID1, n.label as sourcename, target as ID2, "
+						+ "n2.label as targetname, weight, name  "
+						+ "FROM edges e " 
+						+ "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
 						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
 						+ "WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
 
 			System.out.println(sql);
-			preparedStatement = connect.prepareStatement(sql);
-			ResultSet rs = preparedStatement.executeQuery();
+			//preparedStatement = connect.prepareStatement(sql);
+			//ResultSet rs = preparedStatement.executeQuery();
+			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+					java.sql.ResultSet.CONCUR_READ_ONLY);
+			stmt.setFetchSize(Integer.MIN_VALUE);
+			ResultSet rs = stmt.executeQuery(sql);
 
 			while (rs.next()) {
-				/*
-				 * User user = new User(); user.setId(rs.getLong("id"));
-				 * user.setId_str(rs.getString("id_str"));
-				 */
+				Edge edge = new Edge();
+				edge.nodeSource.setId(rs.getLong("ID1"));
+				edge.nodeSource.setLabel(rs.getString("sourcename"));
+				edge.nodeSource.setCount(rs.getInt("sourceCount"));
+				edge.nodeTarget.setId(rs.getLong("ID2"));
+				edge.nodeTarget.setLabel(rs.getString("targetname"));
+				edge.nodeTarget.setCount(rs.getInt("targetCount"));
+				edge.setWeight(rs.getInt("weight"));
+				edge.setRelation(rs.getString("name"));
+				edgesList.add(edge);
+
 			}
+			
 
 		} catch (Exception ex) {
 			System.out.println("ERROR getTweets: " + ex.getMessage());
 			ex.printStackTrace();
 		}
 
-		return usersList;
+		return edgesList;
+	}
+	
+	public ResultSet getEdgesBySearch(int idSearch, int total) {
+
+		ResultSet rs=null;
+		try {
+			connect();
+			String sql = "";
+			if (total == -1)
+				sql = "SELECT n.id as ID1, n.label as sourcename, target as ID2, "
+						+ "n2.label as targetname, weight, name  " 
+						+ "FROM edges e "
+						+ "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
+						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
+						+ "WHERE e.idsearch = " + idSearch + ";";
+			else
+				sql = "SELECT n.id as ID1, n.label as sourcename, target as ID2, "
+						+ "n2.label as targetname, weight, name  " 
+						+ "FROM edges e " 
+						+ "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
+						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
+						+ "WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
+
+			System.out.println(sql);
+			/*preparedStatement = connect.prepareStatement(sql);
+			rs = preparedStatement.executeQuery();*/
+			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+					java.sql.ResultSet.CONCUR_READ_ONLY);
+			stmt.setFetchSize(Integer.MIN_VALUE);
+			rs = stmt.executeQuery(sql);
+			
+
+		} catch (Exception ex) {
+			System.out.println("ERROR getEdges: " + ex.getMessage());
+			ex.printStackTrace();
+		}
+
+		return rs;
+	}
+	
+	public ArrayList<Node> getNodesBySearchJson(int idSearch, int total) {
+		ArrayList<Node> nodesList = new ArrayList<Node>();
+
+		try {
+			connect();
+			String sql = "";
+			if (total == -1)
+				sql = "SELECT id, label,url,count " 
+						+ "FROM nodes e "
+						+ "WHERE e.idsearch = " + idSearch + ";";
+			else
+				sql = "SELECT id, label,url,count " 
+						+ "FROM nodes e "
+						+ "WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
+
+			System.out.println(sql);
+			/*preparedStatement = connect.prepareStatement(sql);
+			ResultSet rs = preparedStatement.executeQuery();*/
+			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+					java.sql.ResultSet.CONCUR_READ_ONLY);
+			stmt.setFetchSize(Integer.MIN_VALUE);
+			ResultSet rs = stmt.executeQuery(sql);
+
+			while (rs.next()) {
+				Node node = new Node();
+				node.setId(rs.getLong("id"));
+				node.setLabel(rs.getString("label"));
+				node.setCount(rs.getInt("count"));
+				node.setUrl(rs.getString("url"));
+				nodesList.add(node);
+			}
+			
+
+		} catch (Exception ex) {
+			System.out.println("ERROR getTweets: " + ex.getMessage());
+			ex.printStackTrace();
+		}
+
+		return nodesList;
+	}
+	
+	public ResultSet getNodesBySearch(int idSearch, int total) {
+		ResultSet rs = null;
+
+		try {
+			connect();
+			String sql = "";
+			if (total == -1)
+				sql = "SELECT id, label,url,count " 
+						+ "FROM nodes e "
+						+ "WHERE e.idsearch = " + idSearch + ";";
+			else
+				sql = "SELECT id, label,url,count " 
+						+ "FROM nodes e "
+						+ "WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
+
+			System.out.println(sql);
+			/*preparedStatement = connect.prepareStatement(sql);
+			rs = preparedStatement.executeQuery();*/
+			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+					java.sql.ResultSet.CONCUR_READ_ONLY);
+			stmt.setFetchSize(Integer.MIN_VALUE);
+			rs = stmt.executeQuery(sql);
+			
+
+		} catch (Exception ex) {
+			System.out.println("ERROR getTweets: " + ex.getMessage());
+			ex.printStackTrace();
+		}
+
+		return rs;
 	}
 }

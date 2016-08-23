@@ -185,7 +185,7 @@ public class SearchManagement {
 		ArrayList tweetsList = new ArrayList();
 		try {
 			ConnectionRDBMS connect = new ConnectionRDBMS();
-			tweetsList = connect.getTweetBySearch(idSearch, total);
+			//tweetsList = connect.getTweetBySearch(idSearch, total);
 		} catch (Exception ex) {
 			System.out.println("ERROR" + ex.getMessage());
 		}

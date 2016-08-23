@@ -21,10 +21,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.NetworkAnalysis.rsc.ConnectionRDBMS;
-import com.NetworkAnalysis.rsc.RelationshipSearch;
-import com.NetworkAnalysis.rsc.SearchType;
-import com.NetworkAnalysis.rsc.TableType;
 import com.google.gson.Gson;
 
 import oauth.signpost.OAuthConsumer;
@@ -323,12 +319,15 @@ public class TwitterRequests {
 
 	@GET
 	@Path("/StreamTweets/{word}/{relation}/{searchName}/{iduser}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public String GetStreamTweets(@PathParam("word") String word, @PathParam("relation") String relation,
-			@PathParam("searchName") String searchName, @PathParam("iduser") int IDUSer) throws IOException {
-
-		String jsonResult = startStreamTweets(word, relation, searchName, IDUSer, Status.START, 0);
-
+			@PathParam("searchName") String searchName, @PathParam("iduser") int IDUser) throws IOException {
+		String jsonResult = startStreamTweets(word, relation, searchName, IDUser, Status.START, 0);
+/*
+ * tweet.startStreamTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(), 
+						Status.RESTART, idSearch);
+ * 
+ * */
 		return jsonResult;
 	}
 
@@ -344,7 +343,7 @@ public class TwitterRequests {
 		Boolean KeepSearch = true;
 		Gson gson = new Gson();
 		Boolean tweetsFound = false;
-
+		
 		try {
 			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(consumerKeyStr, consumerSecretStr);
 			oAuthConsumer.setTokenWithSecret(accessTokenStr, accessTokenSecretStr);

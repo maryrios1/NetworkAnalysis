@@ -27,6 +27,10 @@ public class Tweet {
 	long favorite_count;
 	int idsearch;
 	String tweet;
+	long retweeted_user_id;
+	String retweeted_user_screen_name;
+	String mentioned_users_ids;
+	String mentioned_users_screen_names;
 	
 
 	public Tweet() {
@@ -38,7 +42,8 @@ public class Tweet {
 	public Tweet(long id, String id_str, String screen_name, int in_reply_to_user_id, String in_reply_to_screen_name,
 			String text, String lang, Boolean possibly_sensitive, Boolean truncated, String hashtags,
 			String user_mentions, String usr_id_str, long usr_id, String location, Date created_at, String source,
-			long retweet_count, Boolean retweeted, long favorite_count, int idsearch, String tweet) {
+			long retweet_count, Boolean retweeted, long favorite_count, int idsearch, String tweet,long retweeted_user_id,
+			String retweeted_user_screen_name, String mentioned_users_ids,String mentioned_users_screen_names) {
 		super();
 		this.id = id;
 		this.id_str = id_str;
@@ -61,6 +66,10 @@ public class Tweet {
 		this.favorite_count = favorite_count;
 		this.idsearch = idsearch;
 		this.tweet = tweet;
+		this.retweeted_user_id = retweeted_user_id;
+		this.retweeted_user_screen_name=retweeted_user_screen_name;
+		this.mentioned_users_ids=mentioned_users_ids;
+		this.mentioned_users_screen_names=mentioned_users_screen_names;
 	}
 
 
@@ -231,6 +240,54 @@ public class Tweet {
 
 	public void setTweet(String tweet) {
 		this.tweet = tweet;
+	}
+
+
+
+	public long getRetweeted_user_id() {
+		return retweeted_user_id;
+	}
+
+
+
+	public void setRetweeted_user_id(long retweeted_user_id) {
+		this.retweeted_user_id = retweeted_user_id;
+	}
+
+
+
+	public String getRetweeted_user_screen_name() {
+		return retweeted_user_screen_name;
+	}
+
+
+
+	public void setRetweeted_user_screen_name(String retweeted_user_screen_name) {
+		this.retweeted_user_screen_name = retweeted_user_screen_name;
+	}
+
+
+
+	public String getMentioned_users_ids() {
+		return mentioned_users_ids;
+	}
+
+
+
+	public void setMentioned_users_ids(String mentioned_users_ids) {
+		this.mentioned_users_ids = mentioned_users_ids;
+	}
+
+
+
+	public String getMentioned_users_screen_names() {
+		return mentioned_users_screen_names;
+	}
+
+
+
+	public void setMentioned_users_screen_names(String mentioned_users_screen_names) {
+		this.mentioned_users_screen_names = mentioned_users_screen_names;
 	}
 
 }

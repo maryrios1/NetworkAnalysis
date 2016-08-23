@@ -2,7 +2,7 @@ package com.NetworkAnalysis.srt;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.sql.Types;
+import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -13,40 +13,26 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.NetworkAnalysis.rsc.ConnectionRDBMS;
+import com.NetworkAnalysis.rsc.Edge;
 import com.NetworkAnalysis.rsc.ExcelUtils;
 import com.NetworkAnalysis.rsc.GlobalVariablesInterface;
+import com.NetworkAnalysis.rsc.Node;
 import com.NetworkAnalysis.rsc.Tweet;
-import com.google.gson.Gson;
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFCell;
+import org.apache.poi.xssf.streaming.SXSSFRow;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+
 
 /**
  * Servlet implementation class ExportToExcelServlet
@@ -89,7 +75,7 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
         
         Workbook wb;
 		try {
-			wb = getTweets(searchId,"Tweets");
+			wb = getTweets(Integer.parseInt(searchId),"Tweets");
 			
 			if (wb != null) {
 	            OutputStream os = response.getOutputStream();
@@ -102,35 +88,36 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 
 	}
 
-	private Workbook getTweets(String searchId, String string) throws java.text.ParseException {
+	private Workbook getTweets(int searchId, String type) throws java.text.ParseException {
 		// TODO Auto-generated method stub
-		Workbook wb = null;
-		List<Tweet> tweets = new ArrayList<Tweet>();
-		
-		ClientConfig config = new DefaultClientConfig();
+		SXSSFWorkbook wb = null;
+		ConnectionRDBMS con = new ConnectionRDBMS(); 
+//		ArrayList<Tweet> listTweets =  con.getTweetBySearch(searchId, -1);
+		ResultSet rs =  con.getTweetBySearch(searchId, -1);
+		/*ClientConfig config = new DefaultClientConfig();
 		Client client = Client.create(config);
 		WebResource service = client.resource(REST_URI);
-		service.accept(MediaType.APPLICATION_JSON_TYPE);
+		service.accept(MediaType.APPLICATION_OCTET_STREAM);
 		String asd = REST_URI + "rest/EnableSearch/" + searchId;
 		WebResource addService = service.path("rest").path("/Search/GetTweetBySearch/" + searchId + "/-1");
 		String jsonTweets = getOutputAsXML(addService);
 		
 		JSONParser parser = new JSONParser();
-		System.out.println("SSS " + jsonTweets);
+		System.out.println("SSS " + jsonTweets);*/
 		
 		try {
 			//JSONObject json = (JSONObject) parser.parse(jsonTweets);
-			JSONArray jArray = (JSONArray)parser.parse(jsonTweets);
-			wb = new XSSFWorkbook();
-            XSSFSheet sheetPhases = (XSSFSheet) wb.createSheet("Tweets");
+			//JSONArray jArray = (JSONArray)parser.parse(jsonTweets);
+			wb = new SXSSFWorkbook(1000);
+            SXSSFSheet sheetPhases = (SXSSFSheet) wb.createSheet("Tweets");
             
             ExcelUtils excelUtils = new ExcelUtils(wb);            
-            XSSFRow rowPhs, rowPrd;
+            SXSSFRow rowPhs, rowEdges,rowNodes;
                
-            //Phases Headers
+            //Tweets Headers
             int r = 0;
             rowPhs = sheetPhases.createRow(r++);
-            //Project Headers
+
             createHeaderCell(rowPhs, 0, "Id", 10000, excelUtils.getStyleHeader1());
             createHeaderCell(rowPhs, 1, "Id Str", 10000, excelUtils.getStyleHeader1());
             createHeaderCell(rowPhs, 2, "Screen name", 10000, excelUtils.getStyleHeader1());            
@@ -150,63 +137,140 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
             createHeaderCell(rowPhs, 16, "retweet_count", 10000, excelUtils.getStyleHeader1());
             createHeaderCell(rowPhs, 17, "retweeted", 10000, excelUtils.getStyleHeader1());
             createHeaderCell(rowPhs, 18, "favorite_count", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 19, "retweeted_user_id", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 20, "retweeted_user_screen_name", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 21, "mentioned_users_ids", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 22, "mentioned_users_screen_names", 10000, excelUtils.getStyleHeader1());
             
-			for(int i = 0; i < jArray.size(); i++)
-			{
-			    Object jTempObject = jArray.get(i);	
-			    System.out.print("Tweet " + i + ":" + jArray.get(i));
-			    JSONObject jsonObject = (JSONObject) jTempObject;
-			    Tweet t1 = new Tweet();
-			    t1.setId((long)jsonObject.get("id"));
-				t1.setId_str(jsonObject.get("id_str").toString());
-				t1.setScreen_name(jsonObject.get("screen_name").toString());
-				t1.setIn_reply_to_user_id(  jsonObject.get("in_reply_to_user_id")!=null?(long)jsonObject.get("in_reply_to_user_id"):0);
-				t1.setIn_reply_to_screen_name(jsonObject.get("in_reply_to_screen_name") != null?jsonObject.get("in_reply_to_screen_name").toString():"");
-				t1.setText(jsonObject.get("text").toString());
-				t1.setLang(jsonObject.get("lang")!=null?jsonObject.get("lang").toString():"");				
-				t1.setPossibly_sensitive(jsonObject.get("possibly_sensitive") != null? ((boolean)jsonObject.get("possibly_sensitive")?true:false):false);
-				t1.setTruncated(jsonObject.get("truncated")!=null?((boolean)jsonObject.get("truncated")?true:false):false);
-				t1.setHashtags(jsonObject.get("hashtags") != null?jsonObject.get("hashtags").toString():null);
-				t1.setUser_mentions(jsonObject.get("user_mentions") != null?jsonObject.get("user_mentions").toString():null);
-				t1.setUsr_id_str(jsonObject.get("usr_id_str").toString());
-				t1.setUsr_id((long) jsonObject.get("usr_id"));
-				t1.setLocation(jsonObject.get("location") != null?jsonObject.get("location").toString():null);
+            int i=0;
+            while (rs.next()) {
+				Tweet tweet = new Tweet();
+				tweet.setId(rs.getLong("id"));
+				tweet.setId_str(rs.getString("id_str"));
+				tweet.setScreen_name(rs.getString("screen_name"));
+				tweet.setIn_reply_to_user_id(rs.getLong("in_reply_to_user_id"));
+				tweet.setIn_reply_to_screen_name(rs.getString("in_reply_to_screen_name"));
+				tweet.setText(rs.getString("text"));
+				tweet.setLang(rs.getString("lang"));
+				tweet.setPossibly_sensitive(rs.getBoolean("possibly_sensitive"));
+				tweet.setTruncated(rs.getBoolean("truncated"));
+				tweet.setHashtags(rs.getString("hashtags"));
+				tweet.setUser_mentions(rs.getString("user_mentions"));
+				tweet.setUsr_id_str(rs.getString("usr_id_str"));
+				tweet.setUsr_id(rs.getLong("usr_id"));
+				tweet.setLocation(rs.getString("location"));
+				//System.out.println("date: " + rs.getTimestamp("created_at").toString());
+				String dateString = rs.getTimestamp("created_at").toString();
+				DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				java.util.Date date = dateFormat.parse(dateString);
+				//System.out.println(dateFormat.format(date));
+				tweet.setCreated_at(date);
+				tweet.setSource(rs.getString("Source"));
+				tweet.setRetweet_count(rs.getLong("retweet_count"));
+				tweet.setRetweeted(rs.getBoolean("retweeted"));
+				tweet.setFavorite_count(rs.getLong("favorite_count"));
+				tweet.setTweet(rs.getString("tweet"));
+				tweet.setIdsearch(rs.getInt("idsearch"));
+				//retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names
+				tweet.setRetweeted_user_id(rs.getLong("retweeted_user_id"));
+				tweet.setRetweeted_user_screen_name(rs.getString("retweeted_user_screen_name"));
+				tweet.setMentioned_users_ids(rs.getString("mentioned_users_ids"));
+				tweet.setMentioned_users_screen_names(rs.getString("mentioned_users_screen_names"));
 				
-				//Checar como convertir la fecha correctamente
-				String dateString = jsonObject.get("created_at").toString();
-				java.util.Date dateUtil = getTwitterDate(dateString);
-								
-				t1.setCreated_at(dateUtil);
-				
-				t1.setSource(jsonObject.get("source").toString());
-				t1.setRetweet_count((long) jsonObject.get("retweet_count"));
-				t1.setRetweeted((boolean) jsonObject.get("retweeted"));
-				t1.setFavorite_count( (long) jsonObject.get("favorite_count"));
-				t1.setTweet(jsonObject.toString());
-			    //tweets.add(t1);
-			    rowPhs = sheetPhases.createRow((i)+1);
-                createCell(rowPhs, 0, t1.getId(), null);
-                createCell(rowPhs, 1, t1.getId_str(), null);
-                createCell(rowPhs, 2, t1.getScreen_name(), null);
-                createCell(rowPhs, 3, t1.getIn_reply_to_user_id(), null);
-                createCell(rowPhs, 4, t1.getIn_reply_to_screen_name(), null);
-                createCell(rowPhs, 5, t1.getText(), null);
-                createCell(rowPhs, 6, t1.getLang(), null);
-                createCell(rowPhs, 7, t1.getPossibly_sensitive(), null);
-                createCell(rowPhs, 8, t1.getTruncated(), null);
-                createCell(rowPhs, 9, t1.getHashtags(), null);
-                createCell(rowPhs, 10, t1.getUser_mentions(), null);
-                createCell(rowPhs, 11, t1.getUsr_id_str(), null);
-                createCell(rowPhs, 12, t1.getUsr_id(), null);
-                createCell(rowPhs, 13, t1.getLocation(), null);
-                createCell(rowPhs, 14, t1.getCreated_at(), excelUtils.getStyleDate());
-                createCell(rowPhs, 15, t1.getSource(), null);
-                createCell(rowPhs, 16, t1.getRetweet_count(), null);
-                createCell(rowPhs, 17, t1.getRetweeted(), null);
-                createCell(rowPhs, 18, t1.getFavorite_count(), null);
-			    
+				rowPhs = sheetPhases.createRow((i)+1);
+                createCell(rowPhs, 0, tweet.getId(), null);
+                createCell(rowPhs, 1, tweet.getId_str(), null);
+                createCell(rowPhs, 2, tweet.getScreen_name(), null);
+                createCell(rowPhs, 3, tweet.getIn_reply_to_user_id(), null);
+                createCell(rowPhs, 4, tweet.getIn_reply_to_screen_name(), null);
+                createCell(rowPhs, 5, tweet.getText(), null);
+                createCell(rowPhs, 6, tweet.getLang(), null);
+                createCell(rowPhs, 7, tweet.getPossibly_sensitive(), null);
+                createCell(rowPhs, 8, tweet.getTruncated(), null);
+                createCell(rowPhs, 9, tweet.getHashtags(), null);
+                createCell(rowPhs, 10, tweet.getUser_mentions(), null);
+                createCell(rowPhs, 11, tweet.getUsr_id_str(), null);
+                createCell(rowPhs, 12, tweet.getUsr_id(), null);
+                createCell(rowPhs, 13, tweet.getLocation(), null);
+                createCell(rowPhs, 14, tweet.getCreated_at(), excelUtils.getStyleDate());
+                createCell(rowPhs, 15, tweet.getSource(), null);
+                createCell(rowPhs, 16, tweet.getRetweet_count(), null);
+                createCell(rowPhs, 17, tweet.getRetweeted(), null);
+                createCell(rowPhs, 18, tweet.getFavorite_count(), null);
+                createCell(rowPhs, 19, tweet.getRetweeted_user_id(), null);
+                createCell(rowPhs, 20, tweet.getRetweeted_user_screen_name(), null);
+                createCell(rowPhs, 21, tweet.getMentioned_users_ids(), null);
+                createCell(rowPhs, 22, tweet.getMentioned_users_screen_names(), null);
+                i++;
 			}
-		} catch (ParseException e) {
+                      
+            System.out.println("Excel add edges");
+            //Edges or relationships
+            SXSSFSheet sheetEdges = (SXSSFSheet) wb.createSheet("Edges");
+            rs=null;
+            rs =  con.getEdgesBySearch(searchId, -1);
+            //Edges Headers
+            r = 0;
+            rowEdges = sheetEdges.createRow(r++);
+
+            createHeaderCell(rowEdges, 0, "ID Source ", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowEdges, 1, "Source Name", 10000, excelUtils.getStyleHeader1());            
+            createHeaderCell(rowEdges, 2, "ID Target", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowEdges, 3, "Target Name", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowEdges, 4, "Weight", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowEdges, 5, "Relation", 10000, excelUtils.getStyleHeader1());
+            
+            i=0;
+            while (rs.next()) {
+				Edge edge = new Edge();
+				edge.nodeSource.setId(rs.getLong("ID1"));
+				edge.nodeSource.setLabel(rs.getString("sourcename"));
+				edge.nodeTarget.setId(rs.getLong("ID2"));
+				edge.nodeTarget.setLabel(rs.getString("targetname"));
+				edge.setWeight(rs.getInt("weight"));
+				edge.setRelation(rs.getString("name"));
+				
+				rowEdges = sheetEdges.createRow((i)+1);
+                createCell(rowEdges, 0, edge.nodeSource.getId(), null);
+                createCell(rowEdges, 1, edge.nodeSource.getLabel(), null);
+                createCell(rowEdges, 2, edge.nodeTarget.getId(), null);
+                createCell(rowEdges, 3, edge.nodeTarget.getLabel(), null);
+                createCell(rowEdges, 4, edge.getWeight(), null);
+                createCell(rowEdges, 5, edge.getRelation(), null);
+                i++;
+			}
+            
+            System.out.println("Excel add nodes");
+            //Edges or relationships
+            SXSSFSheet sheetNodes = (SXSSFSheet) wb.createSheet("Nodes");
+            rs=null;
+            rs =  con.getNodesBySearch(searchId, -1);
+            //Edges Headers
+            r = 0;
+            rowNodes = sheetNodes.createRow(r++);
+
+            createHeaderCell(rowNodes, 0, "ID", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowNodes, 1, "Name", 10000, excelUtils.getStyleHeader1());            
+            createHeaderCell(rowNodes, 2, "Url", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowNodes, 3, "Count", 10000, excelUtils.getStyleHeader1());
+            
+            i=0;
+            while (rs.next()) {
+				Node node = new Node();
+				node.setId(rs.getLong("id"));
+				node.setLabel(rs.getString("label"));
+				node.setCount(rs.getInt("count"));
+				node.setUrl(rs.getString("url"));
+				
+				rowNodes = sheetNodes.createRow((i)+1);
+                createCell(rowNodes, 0, node.getId(), null);
+                createCell(rowNodes, 1, node.getLabel(), null);
+                createCell(rowNodes, 2, node.getUrl(), null);
+                createCell(rowNodes, 3, node.getCount(), null);
+                i++;
+			}
+            
+		} catch (Exception e) {//ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		/*} catch (java.text.ParseException e) {
@@ -263,19 +327,19 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 		return sf.parse(date);
 	}
 	
-	static void createHeaderCell(XSSFRow row, int index, String header, int width, CellStyle style) {
-        XSSFSheet sheet = row.getSheet();
+	static void createHeaderCell(SXSSFRow row, int index, String header, int width, CellStyle style) {
+        SXSSFSheet sheet = row.getSheet();
         sheet.setColumnWidth(index, width);
         
-        XSSFCell cell = row.createCell(index);
+        SXSSFCell cell = row.createCell(index);
         cell.setCellValue(header);
         cell.setCellStyle(style);
     }
             
-    static void createCell(XSSFRow row, int index, Object value, CellStyle style) {
+    static void createCell(SXSSFRow row, int index, Object value, CellStyle style) {
         if (value != null)
         {
-            XSSFCell cell = row.createCell(index);
+            SXSSFCell cell = row.createCell(index);
 
             if (style != null) {
                 cell.setCellStyle(style);
@@ -310,6 +374,7 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
         }
     }
 }
+
 
 
 

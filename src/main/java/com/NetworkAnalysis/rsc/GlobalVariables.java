@@ -5,6 +5,9 @@ public class GlobalVariables {
 	String connection;
 	
 	public GlobalVariables() {
+		//local
+		//connection = "http://localhost:8080/NetworkAnalysis/";
+		//amazon
 		connection = "http://localhost/NetworkAnalysis/";
 	}
 
@@ -16,3 +19,4 @@ public class GlobalVariables {
 		this.connection = connection;
 	}
 }
+

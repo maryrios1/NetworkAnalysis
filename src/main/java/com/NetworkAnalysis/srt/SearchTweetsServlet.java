@@ -106,9 +106,12 @@ public class SearchTweetsServlet extends HttpServlet implements GlobalVariablesI
         
         ClientConfig config = new DefaultClientConfig();
 		Client client = Client.create(config);
+		
 		WebResource service = client.resource(REST_URI);
+		//service.header("Content-Type", "application/json;charset=UTF-8");
 		String asd = REST_URI + "rest" + SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1";
 		WebResource addService;
+		
 		if (SEARCH_TYPE.equals("Search"))
 			addService = service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1");
 		else
