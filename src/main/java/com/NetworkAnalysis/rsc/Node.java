@@ -2,7 +2,7 @@ package com.NetworkAnalysis.rsc;
 
 public class Node {
 	
-	long id;
+	String id;
 	String label;
 	String url;
 	int count;
@@ -11,18 +11,18 @@ public class Node {
 		// TODO Auto-generated constructor stub
 	}
 
-	public Node(long id, String label, String url, int count) {
+	public Node(String id, String label, String url, int count) {
 		this.id = id;
 		this.label = label;
 		this.url = url;
 		this.count = count;
 	}
 
-	public long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

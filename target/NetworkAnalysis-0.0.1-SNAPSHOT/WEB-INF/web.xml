@@ -22,14 +22,21 @@
     <servlet-name>NetworkAnalysis</servlet-name>
     <url-pattern>/rest/*</url-pattern>
   </servlet-mapping>
-  
-  <!--  <servlet>
-    <servlet-name>SearchTweetsServlet</servlet-name>
-    <servlet-class>com.Network.Analysis.srt.SearchTweetsServlet</servlet-class>
-</servlet>
-<servlet-mapping>
-    <servlet-name>SearchTweetsServlet</servlet-name>
-    <url-pattern>/SearchTweetsServlet</url-pattern>
-</servlet-mapping>-->
-
+  <servlet>
+    <servlet-name>ExportToExcel</servlet-name>
+    <servlet-class>com.NetworkAnalysis.srt.ExportToExcelServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ExportToExcel</servlet-name>
+    <url-pattern>/ExportToExcel</url-pattern>
+  </servlet-mapping>
+   <!-- 
+   <servlet>
+    <servlet-name>RestartStopSearchServlet</servlet-name>
+    <servlet-class>com.NetworkAnalysis.srt.RestartStopSearchServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>RestartStopSearchServlet</servlet-name>
+    <url-pattern>/RestartStopSearchServlet</url-pattern>
+  </servlet-mapping> -->
 </web-app>

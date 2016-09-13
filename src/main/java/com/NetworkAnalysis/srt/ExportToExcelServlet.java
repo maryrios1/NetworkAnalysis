@@ -80,7 +80,22 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 			if (wb != null) {
 	            OutputStream os = response.getOutputStream();
 	            wb.write(os);
-	        }			
+	        }
+			
+			wb = getEdges(Integer.parseInt(searchId),"Edges");
+			
+			if (wb != null) {
+	            OutputStream os = response.getOutputStream();
+	            wb.write(os);
+	        }
+			
+			wb = getNodes(Integer.parseInt(searchId),"Nodes");
+			
+			if (wb != null) {
+	            OutputStream os = response.getOutputStream();
+	            wb.write(os);
+	        }
+			
 		} catch (java.text.ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -118,29 +133,29 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
             int r = 0;
             rowPhs = sheetPhases.createRow(r++);
 
-            createHeaderCell(rowPhs, 0, "Id", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 1, "Id Str", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 2, "Screen name", 10000, excelUtils.getStyleHeader1());            
-            createHeaderCell(rowPhs, 3, "in_reply_to_user_id", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 4, "in_reply_to_screen_name", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 5, "Text", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 6, "Lang", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 7, "possibly_sensitive", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 8, "truncated", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 9, "hashtags", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 10, "user_mentions", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 11, "usr_id_str", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 12, "usr_id", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 13, "location", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 14, "created_at", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 15, "source", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 16, "retweet_count", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 17, "retweeted", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 18, "favorite_count", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 19, "retweeted_user_id", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 20, "retweeted_user_screen_name", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 21, "mentioned_users_ids", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowPhs, 22, "mentioned_users_screen_names", 10000, excelUtils.getStyleHeader1());
+            //createHeaderCell(rowPhs, 0, "Id", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 0, "Id Str", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 1, "Screen name", 10000, excelUtils.getStyleHeader1());            
+            createHeaderCell(rowPhs, 2, "in_reply_to_user_id", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 3, "in_reply_to_screen_name", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 4, "Text", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 5, "Lang", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 6, "possibly_sensitive", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 7, "truncated", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 8, "hashtags", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 9, "user_mentions", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 10, "usr_id_str", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 11, "usr_id", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 12, "location", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 13, "created_at", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 14, "source", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 15, "retweet_count", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 16, "retweeted", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 17, "favorite_count", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 18, "retweeted_user_id", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 19, "retweeted_user_screen_name", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 20, "mentioned_users_ids", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowPhs, 21, "mentioned_users_screen_names", 10000, excelUtils.getStyleHeader1());
             
             int i=0;
             while (rs.next()) {
@@ -178,54 +193,81 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 				tweet.setMentioned_users_screen_names(rs.getString("mentioned_users_screen_names"));
 				
 				rowPhs = sheetPhases.createRow((i)+1);
-                createCell(rowPhs, 0, tweet.getId(), null);
-                createCell(rowPhs, 1, tweet.getId_str(), null);
-                createCell(rowPhs, 2, tweet.getScreen_name(), null);
-                createCell(rowPhs, 3, tweet.getIn_reply_to_user_id(), null);
-                createCell(rowPhs, 4, tweet.getIn_reply_to_screen_name(), null);
-                createCell(rowPhs, 5, tweet.getText(), null);
-                createCell(rowPhs, 6, tweet.getLang(), null);
-                createCell(rowPhs, 7, tweet.getPossibly_sensitive(), null);
-                createCell(rowPhs, 8, tweet.getTruncated(), null);
-                createCell(rowPhs, 9, tweet.getHashtags(), null);
-                createCell(rowPhs, 10, tweet.getUser_mentions(), null);
-                createCell(rowPhs, 11, tweet.getUsr_id_str(), null);
-                createCell(rowPhs, 12, tweet.getUsr_id(), null);
-                createCell(rowPhs, 13, tweet.getLocation(), null);
-                createCell(rowPhs, 14, tweet.getCreated_at(), excelUtils.getStyleDate());
-                createCell(rowPhs, 15, tweet.getSource(), null);
-                createCell(rowPhs, 16, tweet.getRetweet_count(), null);
-                createCell(rowPhs, 17, tweet.getRetweeted(), null);
-                createCell(rowPhs, 18, tweet.getFavorite_count(), null);
-                createCell(rowPhs, 19, tweet.getRetweeted_user_id(), null);
-                createCell(rowPhs, 20, tweet.getRetweeted_user_screen_name(), null);
-                createCell(rowPhs, 21, tweet.getMentioned_users_ids(), null);
-                createCell(rowPhs, 22, tweet.getMentioned_users_screen_names(), null);
+                //createCell(rowPhs, 0, tweet.getId(), null);
+                createCell(rowPhs, 0, tweet.getId_str(), null);
+                createCell(rowPhs, 1, tweet.getScreen_name(), null);
+                createCell(rowPhs, 2, tweet.getIn_reply_to_user_id(), null);
+                createCell(rowPhs, 3, tweet.getIn_reply_to_screen_name(), null);
+                createCell(rowPhs, 4, tweet.getText(), null);
+                createCell(rowPhs, 5, tweet.getLang(), null);
+                createCell(rowPhs, 6, tweet.getPossibly_sensitive(), null);
+                createCell(rowPhs, 7, tweet.getTruncated(), null);
+                createCell(rowPhs, 8, tweet.getHashtags(), null);
+                createCell(rowPhs, 9, tweet.getUser_mentions(), null);
+                createCell(rowPhs, 10, tweet.getUsr_id_str(), null);
+                createCell(rowPhs, 11, tweet.getUsr_id(), null);
+                createCell(rowPhs, 12, tweet.getLocation(), null);
+                createCell(rowPhs, 13, tweet.getCreated_at(), excelUtils.getStyleDate());
+                createCell(rowPhs, 14, tweet.getSource(), null);
+                createCell(rowPhs, 15, tweet.getRetweet_count(), null);
+                createCell(rowPhs, 16, tweet.getRetweeted(), null);
+                createCell(rowPhs, 17, tweet.getFavorite_count(), null);
+                createCell(rowPhs, 18, tweet.getRetweeted_user_id(), null);
+                createCell(rowPhs, 19, tweet.getRetweeted_user_screen_name(), null);
+                createCell(rowPhs, 20, tweet.getMentioned_users_ids(), null);
+                createCell(rowPhs, 21, tweet.getMentioned_users_screen_names(), null);
                 i++;
-			}
-                      
+			}                  
+            
+		} catch (Exception e) {//ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		/*} catch (java.text.ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();*/
+		}
+		
+		return wb;
+		
+	}
+	
+	
+	private Workbook getEdges(int searchId, String type) throws java.text.ParseException {
+		// TODO Auto-generated method stub
+		SXSSFWorkbook wb = null;
+		ConnectionRDBMS con = new ConnectionRDBMS(); 
+
+		
+		try {
+			
+			wb = new SXSSFWorkbook(1000);
+            
+            ExcelUtils excelUtils = new ExcelUtils(wb);            
+            SXSSFRow rowPhs, rowEdges,rowNodes;
+            int r,i = 0;
+                                  
             System.out.println("Excel add edges");
             //Edges or relationships
             SXSSFSheet sheetEdges = (SXSSFSheet) wb.createSheet("Edges");
-            rs=null;
+            ResultSet rs;
             rs =  con.getEdgesBySearch(searchId, -1);
             //Edges Headers
             r = 0;
             rowEdges = sheetEdges.createRow(r++);
 
-            createHeaderCell(rowEdges, 0, "ID Source ", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowEdges, 0, "Source", 10000, excelUtils.getStyleHeader1());
             createHeaderCell(rowEdges, 1, "Source Name", 10000, excelUtils.getStyleHeader1());            
-            createHeaderCell(rowEdges, 2, "ID Target", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowEdges, 2, "Target", 10000, excelUtils.getStyleHeader1());
             createHeaderCell(rowEdges, 3, "Target Name", 10000, excelUtils.getStyleHeader1());
             createHeaderCell(rowEdges, 4, "Weight", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowEdges, 5, "Relation", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowEdges, 5, "Label", 10000, excelUtils.getStyleHeader1());
             
             i=0;
             while (rs.next()) {
 				Edge edge = new Edge();
-				edge.nodeSource.setId(rs.getLong("ID1"));
+				edge.nodeSource.setId(rs.getString("ID1"));
 				edge.nodeSource.setLabel(rs.getString("sourcename"));
-				edge.nodeTarget.setId(rs.getLong("ID2"));
+				edge.nodeTarget.setId(rs.getString("ID2"));
 				edge.nodeTarget.setLabel(rs.getString("targetname"));
 				edge.setWeight(rs.getInt("weight"));
 				edge.setRelation(rs.getString("name"));
@@ -250,14 +292,70 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
             rowNodes = sheetNodes.createRow(r++);
 
             createHeaderCell(rowNodes, 0, "ID", 10000, excelUtils.getStyleHeader1());
-            createHeaderCell(rowNodes, 1, "Name", 10000, excelUtils.getStyleHeader1());            
+            createHeaderCell(rowNodes, 1, "Label", 10000, excelUtils.getStyleHeader1());            
             createHeaderCell(rowNodes, 2, "Url", 10000, excelUtils.getStyleHeader1());
             createHeaderCell(rowNodes, 3, "Count", 10000, excelUtils.getStyleHeader1());
             
             i=0;
             while (rs.next()) {
 				Node node = new Node();
-				node.setId(rs.getLong("id"));
+				node.setId(rs.getString("id"));
+				node.setLabel(rs.getString("label"));
+				node.setCount(rs.getInt("count"));
+				node.setUrl(rs.getString("url"));
+				
+				rowNodes = sheetNodes.createRow((i)+1);
+                createCell(rowNodes, 0, node.getId(), null);
+                createCell(rowNodes, 1, node.getLabel(), null);
+                createCell(rowNodes, 2, node.getUrl(), null);
+                createCell(rowNodes, 3, node.getCount(), null);
+                i++;
+			}
+            
+		} catch (Exception e) {//ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		/*} catch (java.text.ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();*/
+		}
+		
+		return wb;
+		
+	}
+	
+	private Workbook getNodes(int searchId, String type) throws java.text.ParseException {
+		// TODO Auto-generated method stub
+		SXSSFWorkbook wb = null;
+		ConnectionRDBMS con = new ConnectionRDBMS(); 
+
+		
+		try {
+			
+			wb = new SXSSFWorkbook(1000);
+            
+            ExcelUtils excelUtils = new ExcelUtils(wb);            
+            SXSSFRow rowNodes;
+            int r,i = 0;
+                                                        
+            System.out.println("Excel add nodes");
+            //Edges or relationships
+            SXSSFSheet sheetNodes = (SXSSFSheet) wb.createSheet("Nodes");
+            ResultSet rs=null;
+            rs =  con.getNodesBySearch(searchId, -1);
+            //Edges Headers
+            r = 0;
+            rowNodes = sheetNodes.createRow(r++);
+
+            createHeaderCell(rowNodes, 0, "ID", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowNodes, 1, "Label", 10000, excelUtils.getStyleHeader1());            
+            createHeaderCell(rowNodes, 2, "Url", 10000, excelUtils.getStyleHeader1());
+            createHeaderCell(rowNodes, 3, "Count", 10000, excelUtils.getStyleHeader1());
+            
+            i=0;
+            while (rs.next()) {
+				Node node = new Node();
+				node.setId(rs.getString("id"));
 				node.setLabel(rs.getString("label"));
 				node.setCount(rs.getInt("count"));
 				node.setUrl(rs.getString("url"));

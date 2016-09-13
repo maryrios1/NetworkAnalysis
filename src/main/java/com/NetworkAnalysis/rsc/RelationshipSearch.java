@@ -24,5 +24,11 @@ public enum RelationshipSearch {
 		public String toString() {
 			return "CONTRIBUTOR";
 		}
+	},
+	HASHTAG	{
+		@Override
+		public String toString() {
+			return "HASHTAG";
+		}
 	}
 }

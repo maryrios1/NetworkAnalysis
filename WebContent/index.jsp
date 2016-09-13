@@ -107,19 +107,42 @@
 	<div class="container">
 	<input type="button" value="Mostrar Historial" id="showTable" />
 		<div id="tablediv" class="table-wrapper">
+		</br>
+			<div class="row 200%"  style="horizontal-align:block;" >
+				<div class="6u 12u$(xsmall)"  >
+					<input type="checkbox" id="cTwets" name="cTwets" checked>
+					<label for="cTwets" style="color:white">Tweets</label>
+				</div>
+				<div class="6u$ 12u$(xsmall)" style="color:white">
+					<input type="checkbox" id="cNormalNodes" name="cNormalNodes" checked>
+					<label for="cNormalNodes" style="color:white">Normal Nodes</label>
+				</div>
+				<div class="6u$ 12u$(xsmall)">
+					<input type="checkbox" id="cNormalRelations" name="cNormalRelations" >
+					<label for="cNormalRelations" style="color:white">Normal Relations</label>
+				</div>
+				<div class="6u$ 12u$(xsmall)">
+					<input type="checkbox" id="cHashtagNodes" name="cHashtagNodes" >
+					<label for="cHashtagNodes" style="color:white">Hashtag Nodes</label>
+				</div>
+				<div class="6u$ 12u$(xsmall)">
+					<input type="checkbox" id="cHashtagRelations" name="cHashtagNodes" >
+					<label for="cHashtagNodes" style="color:white">Hashtag Nodes</label>
+				</div>
+			</div>
 			<table cellspacing="0" id="searchtable" >
 				    
-				<thead>
-					<tr>
+				<thead >
+					<tr >
 						        
-						<th scope="col">Search Name</th> 
-						<th scope="col">Words</th> 					                
-						<th scope="col">Start Search</th>         
-						<th scope="col">End Search</th>         
-						<th scope="col">Last Update</th>         
-						<th scope="col">Type</th>              
-						<th scope="col">Keep Searching</th>  
-						<th scope="col">Export</th>  
+						<th scope="col" style="color:white">Search Name</th> 
+						<th scope="col" style="color:white">Words</th> 					                
+						<th scope="col" style="color:white">Start Search</th>         
+						<th scope="col" style="color:white">End Search</th>         
+						<th scope="col" style="color:white">Last Update</th>         
+						<th scope="col" style="color:white">Type</th>              
+						<th scope="col" style="color:white">Keep Searching</th>  
+						<th scope="col" style="color:white">Export</th>  
 					</tr>
 				</thead>
 			</table>

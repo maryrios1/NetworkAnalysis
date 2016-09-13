@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Date;
 
 import javax.ws.rs.GET;
@@ -99,6 +100,27 @@ public class TwitterRequests {
 		/*
 		 * } }).start();
 		 */
+
+	}
+	
+	@GET
+	@Path("/FixTweets/{idSearch}/{delete}/{start}/{total}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public void FixTweets( @PathParam("idSearch") int IdSearch,@PathParam("delete") int delete,@PathParam("start") int start,@PathParam("total") int total
+	// ,@Suspended final AsyncResponse asyncResponse
+	) throws IOException {
+		
+		dbConnection= new ConnectionRDBMS();
+		if(total==-1 || total>10000){
+			int pos=10000;
+			while(pos<=total){
+				dbConnection.fixTweets(IdSearch,delete,start,10000);
+				pos+=10000;
+			}
+			dbConnection.fixTweets(IdSearch,delete,start,total-(pos-10000));
+		}
+		else
+			dbConnection.fixTweets(IdSearch,delete,start,total);
 
 	}
 

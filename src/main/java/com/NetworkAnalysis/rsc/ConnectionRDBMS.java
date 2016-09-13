@@ -21,15 +21,16 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-public class ConnectionRDBMS {
+public class ConnectionRDBMS implements GlobalVariablesInterface {
 
-	private static String USER = "cgc_user";
-	private static String PASSWORD = "cgc_D3Access82)";
-	private static String DB = "TwitterDB";
-	private static String HOST = "cgcapp.coh6dv3qg5l4.us-west-2.rds.amazonaws.com";
-	private static String PORT = "1531";
-	private static Connection connect = null;
+	private static String USER = global.getUSER();
+	private static String PASSWORD = global.getPASSWORD();
+	private static String DB = global.getDB();
+	private static String HOST = global.getHOST();
+	private static String PORT = global.getPORT();
+	public static Connection connect = null;
 	static PreparedStatement preparedStatement = null;
+	static PreparedStatement preparedStatement2 = null;
 	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	public ConnectionRDBMS() {
@@ -196,13 +197,42 @@ public class ConnectionRDBMS {
 			tempString = jsonObject.get("entities").toString();
 			jOTemp = (JSONObject) parser.parse(tempString);
 
+			///insert hashtags relations mary!
 			if (jOTemp.get("hashtags") == null)
 				preparedStatement.setNull(10, 0);
 			else {
 				JSONArray jArray = (JSONArray) jOTemp.get("hashtags");
 				String tempHash = "";
-				for (int i = 0; i < jArray.size(); i++)
-					tempHash += ((JSONObject) jArray.get(i)).get("text").toString() + ",";
+				for (int i = 0; i < jArray.size(); i++){
+				//	tempHash += ((JSONObject) jArray.get(i)).get("text").toString() + ",";
+					String hashtag= ((JSONObject) jArray.get(i)).get("text").toString();
+                    tempHash += hashtag + ",";
+                    
+                    preparedStatement2 = connect.prepareStatement(
+                            "INSERT INTO nodes (id,label,url,idsearch,type) "
+                                + "VALUES (?, ?, ?,?,'Hashtag' ) ON DUPLICATE KEY UPDATE count=count+1;");
+
+                    userString = jsonObject.get("user").toString();
+                    jOUser = (JSONObject) parser.parse(userString);
+                    //jOUser.get("screen_name").toString()
+                    preparedStatement2.setString(1, hashtag);
+                    preparedStatement2.setString(2, hashtag);
+                    preparedStatement2.setString(3, null);
+                    preparedStatement2.setInt(4, idsearch);
+                    status = executeStatement(preparedStatement2);
+                    //Insert relationship
+                    preparedStatement2 = connect.prepareStatement(
+                                "INSERT INTO  edges (source,target,name,idsearch,type) "
+                                        + "VALUES (?, ?, ?,? ,'Hashtag') ON DUPLICATE KEY UPDATE weight=weight+1;");
+
+                    userString = jsonObject.get("user").toString();
+                    jOUser = (JSONObject) parser.parse(userString);
+                    preparedStatement2.setString(1,  jOUser.get("id").toString());
+                    preparedStatement2.setString(2,hashtag );
+                    preparedStatement2.setString(3, "HASHTAG");
+                    preparedStatement2.setInt(4, idsearch);                    
+                    status = executeStatement(preparedStatement2);
+				}
 				if (jArray.size() > 0) {
 					tempHash = tempHash.substring(0, tempHash.length() - 1);
 					preparedStatement.setString(10, tempHash);
@@ -322,7 +352,7 @@ public class ConnectionRDBMS {
 
 			userString = jsonObject.get("user").toString();
 			jOUser = (JSONObject) parser.parse(userString);
-			preparedStatement.setLong(1, (Long) jOUser.get("id"));
+			preparedStatement.setString(1, jOUser.get("id").toString());
 			preparedStatement.setInt(4, idsearch);
 
 			// Create relationship
@@ -337,7 +367,7 @@ public class ConnectionRDBMS {
 
 				// tweets
 				System.out.println("RETWEETED in");
-				preparedStatement.setLong(2, (Long) jOUser2.get("id"));
+				preparedStatement.setString(2, jOUser2.get("id").toString());
 				preparedStatement.setString(3, "RETWEETED");
 				status = executeStatement(preparedStatement);
 
@@ -347,7 +377,7 @@ public class ConnectionRDBMS {
 
 			if (jsonObject.get("in_reply_to_user_id") != null) {
 				System.out.println("replied in");
-				preparedStatement.setLong(2, (Long) jsonObject.get("in_reply_to_user_id"));
+				preparedStatement.setString(2,  jsonObject.get("in_reply_to_user_id").toString());
 				preparedStatement.setString(3, "REPLIED");
 				status = executeStatement(preparedStatement);
 
@@ -368,7 +398,7 @@ public class ConnectionRDBMS {
 				for (int i = 0; i < jAUsers.size(); i++) {
 					String tempUserMentionId = ((JSONObject) jAUsers.get(i)).get("id").toString();
 
-					preparedStatement.setLong(2, (Long) ((JSONObject) jAUsers.get(i)).get("id"));
+					preparedStatement.setString(2,  ((JSONObject) jAUsers.get(i)).get("id").toString());
 					preparedStatement.setString(3, "MENTIONED");
 					status = executeStatement(preparedStatement);
 					System.out.print(i + ",");
@@ -426,7 +456,7 @@ public class ConnectionRDBMS {
 			userString = jsonObject.get("user").toString();
 			jOUser = (JSONObject) parser.parse(userString);
 
-			preparedStatement.setLong(1, (Long) jOUser.get("id"));
+			preparedStatement.setString(1, jOUser.get("id").toString());
 			preparedStatement.setString(2, jOUser.get("screen_name").toString());
 			preparedStatement.setString(3, jOUser.get("profile_image_url_https").toString());
 			preparedStatement.setInt(4, idsearch);
@@ -442,7 +472,7 @@ public class ConnectionRDBMS {
 
 				preparedStatement = connect
 						.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) VALUES (?, ?, ?,? )");
-				preparedStatement.setLong(1, (Long) jOUser2.get("id"));
+				preparedStatement.setString(1,  jOUser2.get("id").toString());
 				preparedStatement.setString(2, jOUser2.get("screen_name").toString());
 				preparedStatement.setString(3, jOUser2.get("profile_image_url_https").toString());
 				preparedStatement.setInt(4, idsearch);
@@ -456,7 +486,7 @@ public class ConnectionRDBMS {
 
 				preparedStatement = connect
 						.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) VALUES (?, ?, ?,? )");
-				preparedStatement.setLong(1, (Long) jsonObject.get("in_reply_to_user_id"));
+				preparedStatement.setString(1, jsonObject.get("in_reply_to_user_id").toString());
 				preparedStatement.setString(2, jsonObject.get("in_reply_to_screen_name").toString());
 				preparedStatement.setString(3, "");
 				preparedStatement.setInt(4, idsearch);
@@ -476,7 +506,7 @@ public class ConnectionRDBMS {
 
 					preparedStatement = connect
 							.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) VALUES (?, ?, ?,? )");
-					preparedStatement.setLong(1, (Long) ((JSONObject) jAUsers.get(i)).get("id"));
+					preparedStatement.setString(1,  ((JSONObject) jAUsers.get(i)).get("id").toString());
 					preparedStatement.setString(2, ((JSONObject) jAUsers.get(i)).get("screen_name").toString());
 					preparedStatement.setString(3, "");
 					preparedStatement.setInt(4, idsearch);
@@ -575,7 +605,7 @@ public class ConnectionRDBMS {
 
 			if (action.equals(Status.STOP)) {
 				preparedStatement = connect.prepareStatement(
-						"UPDATE search set keepsearching = ?, endsearch = now() WHERE idsearch = ? ;");
+						"UPDATE search SET keepsearching = ?, endsearch = now() WHERE idsearch = ? ;");
 				preparedStatement.setBoolean(1, false);
 			} else {
 				preparedStatement = connect
@@ -1048,10 +1078,10 @@ public class ConnectionRDBMS {
 
 			while (rs.next()) {
 				Edge edge = new Edge();
-				edge.nodeSource.setId(rs.getLong("ID1"));
+				edge.nodeSource.setId(rs.getString("ID1"));
 				edge.nodeSource.setLabel(rs.getString("sourcename"));
 				edge.nodeSource.setCount(rs.getInt("sourceCount"));
-				edge.nodeTarget.setId(rs.getLong("ID2"));
+				edge.nodeTarget.setId(rs.getString("ID2"));
 				edge.nodeTarget.setLabel(rs.getString("targetname"));
 				edge.nodeTarget.setCount(rs.getInt("targetCount"));
 				edge.setWeight(rs.getInt("weight"));
@@ -1132,7 +1162,7 @@ public class ConnectionRDBMS {
 
 			while (rs.next()) {
 				Node node = new Node();
-				node.setId(rs.getLong("id"));
+				node.setId(rs.getString("id"));
 				node.setLabel(rs.getString("label"));
 				node.setCount(rs.getInt("count"));
 				node.setUrl(rs.getString("url"));
@@ -1179,4 +1209,261 @@ public class ConnectionRDBMS {
 
 		return rs;
 	}
+	
+	public void updateTweetDB(JSONObject jsonObject, RelationshipSearch relation, int idsearch,String IDTweet) throws Exception {
+        int status = -1;
+        JSONParser parser = new JSONParser();
+        Object obj = null;
+        //JSONObject jsonObject;
+        String userString = "";
+        JSONObject jOUser = null;
+        JSONObject jOUser2 = null;
+        JSONObject jOTemp = null;
+        String tempString = "";
+
+        try {
+            //obj = parser.parse(text);
+            //jsonObject = (JSONObject) obj;
+
+            preparedStatement = connect.prepareStatement(
+                "UPDATE tweet SET screen_name = ?,in_reply_to_user_id =?,"
+                        + "in_reply_to_screen_name=?,text=?,lang=?,possibly_sensitive=?,"
+                        + "truncated=?,hashtags=?,user_mentions=?,usr_id_str=?,usr_id=?,"
+                        + "location=?,created_at=?,source=?,retweet_count=?,retweeted=?,"
+                        + "favorite_count=?,"
+                        + "retweeted_user_id=?,retweeted_user_screen_name=?,mentioned_users_ids=?,mentioned_users_screen_names=?,updated=1 "
+                    + "WHERE id_str = ? ;");
+
+            userString = jsonObject.get("user").toString();
+            jOUser = (JSONObject) parser.parse(userString);
+
+            //preparedStatement.setLong(1, (long) jsonObject.get("id"));
+            //preparedStatement.setString(2, jsonObject.get("id_str").toString());
+            preparedStatement.setString(1, jOUser.get("screen_name").toString());
+
+            if (jsonObject.get("in_reply_to_user_id") == null)
+                    preparedStatement.setNull(2, 0);
+            else
+                    preparedStatement.setLong(2, (Long) jsonObject.get("in_reply_to_user_id"));
+
+            if (jsonObject.get("in_reply_to_screen_name") == null)
+                    preparedStatement.setNull(3, 0);
+            else
+                    preparedStatement.setString(3, jsonObject.get("in_reply_to_screen_name").toString());
+
+            preparedStatement.setString(4, jsonObject.get("text").toString());
+            preparedStatement.setString(5, jsonObject.get("lang").toString());
+
+            if (jsonObject.get("possibly_sensitive") == null)
+                    preparedStatement.setBoolean(6, false);
+            else
+                    preparedStatement.setBoolean(6, (boolean) jsonObject.get("possibly_sensitive"));
+
+            preparedStatement.setBoolean(7, (boolean) jsonObject.get("truncated"));
+
+            // Get the hashtags
+            tempString = jsonObject.get("entities").toString();
+            jOTemp = (JSONObject) parser.parse(tempString);
+
+            if (jOTemp.get("hashtags") == null)
+                    preparedStatement.setNull(8, 0);
+            else {
+                JSONArray jArray = (JSONArray) jOTemp.get("hashtags");
+                String tempHash = "";
+                for (int i = 0; i < jArray.size(); i++){
+                    String hashtag= ((JSONObject) jArray.get(i)).get("text").toString();
+                    tempHash += hashtag + ",";
+                    
+                    preparedStatement2 = connect.prepareStatement(
+                            "INSERT INTO nodes (id,label,url,idsearch,type) "
+                                + "VALUES (?, ?, ?,?,'Hashtag' ) ON DUPLICATE KEY UPDATE count=count+1;");
+
+                    userString = jsonObject.get("user").toString();
+                    jOUser = (JSONObject) parser.parse(userString);
+                    //jOUser.get("screen_name").toString()
+                    preparedStatement2.setString(1, hashtag);
+                    preparedStatement2.setString(2, hashtag);
+                    preparedStatement2.setString(3, null);
+                    preparedStatement2.setInt(4, idsearch);
+                    status = executeStatement(preparedStatement2);
+                    //Insert relationship
+                    preparedStatement2 = connect.prepareStatement(
+                                "INSERT INTO  edges (source,target,name,idsearch,type) "
+                                        + "VALUES (?, ?, ?,? ,'Hashtag') ON DUPLICATE KEY UPDATE weight=weight+1;");
+
+                    userString = jsonObject.get("user").toString();
+                    jOUser = (JSONObject) parser.parse(userString);
+                    preparedStatement2.setString(1,  jOUser.get("id").toString());
+                    preparedStatement2.setString(2,hashtag );
+                    preparedStatement2.setString(3, "HASHTAG MENTIONED");
+                    preparedStatement2.setInt(4, idsearch);                    
+                    status = executeStatement(preparedStatement2);
+                    
+                }
+                if (jArray.size() > 0) {
+                        tempHash = tempHash.substring(0, tempHash.length() - 1);
+                        preparedStatement.setString(8, tempHash);
+                } else
+                        preparedStatement.setNull(8, 0);
+            }
+
+            // entities->user_mentiones->id,id_str,screen_name
+            if (jOTemp.get("user_mentions") == null)
+                    preparedStatement.setNull(9, 0);
+            else
+                    preparedStatement.setString(9, jOTemp.get("user_mentions").toString());
+
+            preparedStatement.setString(10, jOUser.get("id_str").toString());
+            preparedStatement.setLong(11, (Long) jOUser.get("id"));
+
+            if (jOUser.get("location") == null)
+                    preparedStatement.setNull(12, 0);
+            else
+                    preparedStatement.setString(12, jOUser.get("location").toString());
+
+            String dateString = jsonObject.get("created_at").toString();
+            java.util.Date dateUtil = getTwitterDate(dateString);
+            java.sql.Timestamp dateSql = new java.sql.Timestamp(dateUtil.getTime());
+
+            preparedStatement.setTimestamp(13, dateSql);
+
+            preparedStatement.setString(14, jsonObject.get("source").toString());
+            preparedStatement.setLong(15, (Long) jsonObject.get("retweet_count"));
+            preparedStatement.setBoolean(16, (boolean) jsonObject.get("retweeted"));
+            preparedStatement.setLong(17, (Long) jsonObject.get("favorite_count"));
+            //preparedStatement.setString(18, jsonObject.toString());
+            //preparedStatement.setInt(19, idsearch);
+            // added columns
+            
+
+            if (jsonObject.get("retweeted_status") != null) {
+                    //System.out.println("new retweeted_status");
+                    String retweetString = jsonObject.get("retweeted_status").toString();
+                    JSONObject jORetweet = (JSONObject) parser.parse(retweetString);
+
+                    String userRetweetString = jORetweet.get("user").toString();
+                    jOUser2 = (JSONObject) parser.parse(userRetweetString);
+                    preparedStatement.setLong(18, (Long) jOUser2.get("id"));
+                    preparedStatement.setString(19, jOUser2.get("screen_name").toString());
+
+            } else {
+                    preparedStatement.setNull(18, 0);
+                    preparedStatement.setNull(19, 0);
+            }
+
+            String entitiesString = jsonObject.get("entities").toString();
+            JSONObject jOEntities = (JSONObject) parser.parse(entitiesString);
+
+            if (jOEntities.get("user_mentions") != null) {
+                    //System.out.println("new user_mentions");
+                    String idsTemp = "";
+                    String screennamesTemp = "";
+                    String userMentionesString = jOEntities.get("user_mentions").toString();
+                    JSONArray jAUsers = (JSONArray) parser.parse(userMentionesString);
+
+                    for (int i = 0; i < jAUsers.size(); i++) {
+                            String tempUserMentionId = ((JSONObject) jAUsers.get(i)).get("id").toString();
+
+                            idsTemp += ((JSONObject) jAUsers.get(i)).get("id").toString() + ",";
+                            screennamesTemp += ((JSONObject) jAUsers.get(i)).get("screen_name").toString() + ",";
+                    }
+
+                    //System.out.println("temp values :" + idsTemp + " --- " + screennamesTemp);
+                    if (idsTemp.length() > 0 && screennamesTemp.length() > 0) {
+                            idsTemp = idsTemp.substring(0, idsTemp.length() - 1);
+                            screennamesTemp = screennamesTemp.substring(0, screennamesTemp.length() - 1);
+                            preparedStatement.setString(20, idsTemp);
+                            preparedStatement.setString(21, screennamesTemp);
+                    } else {
+                            preparedStatement.setNull(20, 0);
+                            preparedStatement.setNull(21, 0);
+                    }
+            } else {
+                    preparedStatement.setNull(20, 0);
+                    preparedStatement.setNull(21, 0);
+            }
+            //preparedStatement.setLong(22, (long) jsonObject.get("id"));
+            //preparedStatement.setString(25, jsonObject.get("id_str").toString());
+            preparedStatement.setString(22, IDTweet);
+            
+            
+            status = preparedStatement.executeUpdate();
+
+        } catch (Exception ex) {
+                System.out.println("ERROR Update tweet DB: " + ex.getMessage());
+                throw ex;
+        }
+
+    }
+	
+	public void fixTweets(int IdSearch,int delete,int from,int total){
+        try{    
+            connect();
+            String sql = "";
+            //DELETE nodes and edges related to the search
+            if(delete==1){
+                System.out.println("Delete nodes starting...");
+                sql = "DELETE FROM nodes WHERE IDSearch = ? ";
+                preparedStatement = connect.prepareStatement(sql);
+                preparedStatement.setInt(1, IdSearch);
+                preparedStatement.execute();
+
+                System.out.println("Delete nodes finished");
+
+                System.out.println("Delete edges starting...");
+                sql = "DELETE FROM edges WHERE IDSearch = ? ";
+                preparedStatement = connect.prepareStatement(sql);
+                preparedStatement.setInt(1, IdSearch);
+                preparedStatement.execute();
+                System.out.println("Delete edges finished");
+            }
+            //preparedStatement.close();
+            System.out.println("Update tweets starting...");
+            if (total == -1)
+                sql = "SELECT id_str,tweet "
+                    + "FROM tweet WHERE idsearch = " + IdSearch + " AND updated=0;";
+            else
+                sql = "SELECT id_str,tweet "
+                    + "FROM tweet WHERE idsearch = " + IdSearch + " AND updated=0 LIMIT " +from + "," + total + ";";
+
+            System.out.println(sql);
+            //Statement stmt = connectRes.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,java.sql.ResultSet.CONCUR_READ_ONLY);
+            
+            
+
+            preparedStatement = connect.prepareStatement(sql);
+
+            ResultSet rs =preparedStatement.executeQuery(); //reparedStatement.executeQuery();
+            System.out.println("Update tweets resulted got ");
+            float i=from;
+            while(rs.next()){
+                i++;
+                String IDTweet = rs.getString("id_str");
+                String Tweet = rs.getString("tweet");
+                //Update tweet and relationships
+                JSONParser parser = new JSONParser();
+                Object obj = null;
+                JSONObject jsonObject;
+                obj = parser.parse(Tweet);
+                
+                jsonObject = (JSONObject) obj;
+                java.util.Date dt2 = new java.util.Date();
+                //System.out.println("Tweet #" + i + " Time:" + dt2.toString());
+                updateTweetDB(jsonObject, RelationshipSearch.REPLIED, IdSearch,IDTweet);
+                insertEdgeDB(Tweet, RelationshipSearch.REPLIED, IdSearch);
+                insertNodeDB(Tweet, RelationshipSearch.REPLIED, IdSearch);
+                dt2 = new java.util.Date();
+                //System.out.println("Tweet #" + i + " Time:" + dt2.toString());
+                if(i%1000==0 ||i%100==0){
+                	java.util.Date dt = new java.util.Date();
+                    System.out.println("Tweet #" + i + " Time:" + dt.toString());
+                }
+            }
+            System.out.println("Update tweets finished");
+        }
+        catch(Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+    }
 }

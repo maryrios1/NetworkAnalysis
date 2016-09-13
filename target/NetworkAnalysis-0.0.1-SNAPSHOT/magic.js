@@ -32,7 +32,8 @@ $(document).ready(function() {
         var formData = {
             'keywords'              : $('input[name=keywords]').val(),
             'SearchName'            : $('input[name=SearchName]').val(),
-            'NameTable'             : $('input[name=NameTable]').val()
+            'NameTable'             : $('input[name=NameTable]').val(),
+            'SearchType'             : $('#SearchType option:selected').val()
         };
 
         //if (value === 'StartSearch') { 
@@ -226,18 +227,35 @@ $(document).ready(function() {
 						if(value['keepsearching']==true) 
 							status = "STOP"; 
 						 else 
-							 status = "RESTART"; 
-							 
-						var rowNew = $("<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><input type='button' value='" + status +"' id='btn_" + value['IDSearch'] + "' /></td</tr>");
+							 status = "RESTART";
+						
+						var selection = ""
+						if(value['type']=='SEARCH')
+							selection = "<option value='STREAM' id='STREAM'>Stream</option>" +
+										"<option value='SEARCH' id='SEARCH' selected='selected'>Search</option> ";
+						else
+							selection = "<option value='STREAM' id='STREAM' selected='selected'>Stream</option>" +
+										"<option value='SEARCH' id='SEARCH'>Search</option> ";
+						
+						//Search Name, Words,,Start Search, End Search,	Last Update,Type,Keep Searching,Export
+						var rowNew = $("<tr><td></td><td></td><td></td><td></td><td></td>" + 
+								"<td><div class='select-wrapper'>" +
+									"<select name='SearchType_" + value['IDSearch'] + "' id='SearchType_" + value['IDSearch'] + "'> " +
+									selection +
+									"</select> " +
+								"</div></td>" +
+								"<td><input type='button' onclick='stopRestartSearch(this," + value['IDSearch'] + ")' value='" + status +"' id='btn_" + value['IDSearch'] + "' /></td>" +
+								"<td><input type='button' onclick='exportToExcel(this," + value['IDSearch'] + ")' value='Export' id='btnExport_" + value['IDSearch'] + "' /></td></tr>");
 						rowNew.children().eq(0).text(value['searchname']); 
-						rowNew.children().eq(1).text(value['iduser']);
-						rowNew.children().eq(6).text(value['searchwords']); 						
+						//rowNew.children().eq(1).text(value['iduser']);
+						rowNew.children().eq(1).text(value['searchwords']); 						
 						rowNew.children().eq(2).text(value['startsearch']); 
 						rowNew.children().eq(3).text(value['endsearch']); 
 						rowNew.children().eq(4).text(value['lastupdate']); 
-						rowNew.children().eq(5).text(value['type']); 
-						rowNew.children().eq(6).text(value['keepsearching']);						
-						rowNew.appendTo(table1);
+						//rowNew.children().eq(5).find("option[value='"+ value['type'] +"']" ).attr('selected','selected');
+						//rowNew.children().eq(5).find("#SearchType_" + value['IDSearch'] + " option[value='"+ value['type'] +"']").attr('selected', 'selected'); 
+						//rowNew.children().eq(6).text(value['keepsearching']);						
+						rowNew.appendTo(table1);						
 					});
  				}
      		});
@@ -259,4 +277,86 @@ function idIndex(a,id) {
     for (var i=0;i<a.length;i++) {
         if (a[i].id == id) return i;}
     return null;
+}
+
+function stopRestartSearch(btn,id){
+	var btnId = btn.id;
+	//alert('The id of the button is ' + btnId + ',  id: ' + id + ', value: ' + btn.value)
+	var formData;
+	if(btn.value == 'RESTART'){
+		formData = {
+	            'typeAction'    : 'RESTART',
+	            'type'          : $('#SearchType_' + id + ' option:selected').val(),
+	            'relation'      : 'REPLIED',
+	            'idSearch'		: id
+	        };
+	}
+	else
+	{
+		formData = {
+	            'typeAction'    : 'STOP',
+	            'idSearch'		: id
+	        };
+	}
+
+	$.ajax({
+        type: 'POST', // define the type of HTTP verb we want to use (POST for our form)
+        url: 'RestartStopSearchServlet', // the url where we want to POST
+        data: formData, // our data object
+        dataType: 'json', // what type of data do we expect back from the server
+        encode: true,
+        beforeSend: function(){
+        	if(btn.value=="RESTART"){
+        		btn.value  = 'STOP'
+        	}
+        	else{
+        		btn.value  = 'RESTART'
+        	}
+        	
+        },
+        complete: function(){
+        	if(btn.value=="STOP"){
+        		btn.value  = 'RESTART'
+        	}
+        	else{
+        		btn.value  = 'STOP'
+        	}
+        }
+    })
+            // using the done promise callback
+            .done(function (data) {
+                // log data to the console so we can see
+                console.log(data);
+                // here we will handle errors and validation messages
+                if (!data.success)
+                {
+                    if (data.errors.keywords) {
+                        $('#raro').addClass('has-error'); // add the error class to show red input
+                        $('#raro').append('<div class="help-block">' + data.errors.name + '</div>'); // add the actual error message under our input
+                    }
+                }
+                else {
+
+                    // ALL GOOD! just show the success message!
+                    $('form').append('<div>' + data.message + '</div>');
+
+                    // usually after form submission, you'll want to redirect
+                    // window.location = '/thank-you'; // redirect a user to another page
+                    alert('success'); // for now we'll just alert the user
+
+                }
+            })
+            // using the fail promise callback
+            .fail(function (data) {
+
+                // show any errors
+                // best to remove for production
+                console.log(data);
+            });
+}
+
+function exportToExcel(btn,id){
+	var btnId = btn.id;
+	//alert('The id of the buttonExcel is ' + btnId + ',  id: ' + id)
+	location.href = "ExportToExcel?SearchId=" + id;
 }

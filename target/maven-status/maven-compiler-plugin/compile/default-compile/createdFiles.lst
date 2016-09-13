@@ -1,8 +1,11 @@
 com\NetworkAnalysis\app\SearchManagement$3.class
+com\NetworkAnalysis\rsc\Node.class
 com\NetworkAnalysis\srt\SearchTweetsServlet.class
 com\NetworkAnalysis\rsc\RelationshipSearch$3.class
 com\NetworkAnalysis\rsc\TableType.class
 com\NetworkAnalysis\rsc\SearchType$2.class
+com\NetworkAnalysis\rsc\GlobalVariables.class
+com\NetworkAnalysis\rsc\ExcelUtils.class
 com\NetworkAnalysis\srt\GetUserSearchesServlet$1.class
 com\NetworkAnalysis\srt\GetUserSearchesServlet.class
 com\NetworkAnalysis\app\SearchManagement.class
@@ -11,8 +14,10 @@ com\NetworkAnalysis\rsc\RelationshipSearch.class
 com\NetworkAnalysis\rsc\User.class
 com\NetworkAnalysis\rsc\SearchType$1.class
 com\NetworkAnalysis\rsc\SearchType.class
+com\NetworkAnalysis\srt\RestartStopSearchServlet.class
 com\NetworkAnalysis\app\TwitterRequests.class
 com\NetworkAnalysis\rsc\Message.class
+com\NetworkAnalysis\rsc\GlobalVariablesInterface.class
 com\NetworkAnalysis\rsc\ConnectionRDBMS.class
 com\NetworkAnalysis\rsc\Search.class
 com\NetworkAnalysis\app\SearchManagement$2.class
@@ -20,6 +25,8 @@ com\NetworkAnalysis\rsc\ConnectionRDBMS$1.class
 com\NetworkAnalysis\app\UserManagement.class
 com\NetworkAnalysis\rsc\RelationshipSearch$4.class
 com\NetworkAnalysis\app\SearchManagement$1.class
+com\NetworkAnalysis\rsc\Edge.class
+com\NetworkAnalysis\srt\ExportToExcelServlet.class
 com\NetworkAnalysis\rsc\Status.class
 com\NetworkAnalysis\rsc\Tweet.class
 com\NetworkAnalysis\rsc\RelationshipSearch$1.class

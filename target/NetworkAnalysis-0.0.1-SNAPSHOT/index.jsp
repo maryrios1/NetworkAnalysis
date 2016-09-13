@@ -65,14 +65,25 @@
 					<header class="major">
 					<h2>¿Que deseas buscar hoy?</h2>
 					</header>
-					<p>Nombre de la búsqueda</p>
+					Nombre de la búsqueda
 					<input type="text" name="SearchName">
-
+					<!-- 
 					<p>
 						Escribe las palabras clave separadas por espacio.<br>
 						Ejemplo: "Facebook" "fb" "face"
-					</p>
-					Palabras clave: <br> <input type="text" name="keywords">
+					</p> -->
+					</br>
+					Tipo de búsqueda
+					<div class="12u$">
+						<div class="select-wrapper">
+							<select name="SearchType" id="SearchType">
+								<option value="Stream">Stream</option>
+								<option value="Search">Search</option>
+							</select>
+						</div>
+					</div>
+					</br>
+					Palabra clave <br> <input type="text" name="keywords">
 					<br id="raro"> <br> <input type="submit"
 						value="Start Search" id="StartSearch">
 					<!-- 
@@ -102,13 +113,13 @@
 					<tr>
 						        
 						<th scope="col">Search Name</th> 
-						<th scope="col">Words</th> 					        
-						<th scope="col">ID User</th>         
+						<th scope="col">Words</th> 					                
 						<th scope="col">Start Search</th>         
 						<th scope="col">End Search</th>         
 						<th scope="col">Last Update</th>         
 						<th scope="col">Type</th>              
 						<th scope="col">Keep Searching</th>  
+						<th scope="col">Export</th>  
 					</tr>
 				</thead>
 			</table>
