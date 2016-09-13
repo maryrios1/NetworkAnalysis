@@ -10,6 +10,7 @@ com\NetworkAnalysis\srt\GetUserSearchesServlet$1.class
 com\NetworkAnalysis\srt\GetUserSearchesServlet.class
 com\NetworkAnalysis\app\SearchManagement.class
 com\NetworkAnalysis\rsc\RelationshipSearch$2.class
+com\NetworkAnalysis\rsc\RelationshipSearch$5.class
 com\NetworkAnalysis\rsc\RelationshipSearch.class
 com\NetworkAnalysis\rsc\User.class
 com\NetworkAnalysis\rsc\SearchType$1.class

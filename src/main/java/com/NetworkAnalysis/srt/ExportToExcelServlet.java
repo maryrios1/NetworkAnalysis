@@ -1,5 +1,6 @@
 package com.NetworkAnalysis.srt;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.ResultSet;
@@ -25,6 +26,9 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import java.util.Date;
 import java.util.Locale;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -72,29 +76,60 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 		/*RequestDispatcher rd = request.getRequestDispatcher("views/excelreport.jsp");
 		rd.forward(request, response);*/
 		//response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-		response.setContentType("text/csv");
+		
+		//response.setContentType("text/csv");
+		//response.setHeader("Content-disposition","inline; filename="+ "Tweets_SearchId_" + searchId + ".csv");
+		response.setContentType("application/zip");
+        response.setHeader("Content-Disposition", "attachment; filename=\"allfiles.zip\"");
+
         Workbook wb;
+       
+        OutputStream os = response.getOutputStream();
+        ZipOutputStream zos = new ZipOutputStream(os);
+		zos.putNextEntry(new ZipEntry("Tweets.csv"));
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        		/*workbook.write(bos);
+        		
+        		bos.writeTo(zos);
+        		zos.closeEntry();*/
+        
 		try {
 			wb = getTweets(Integer.parseInt(searchId),"Tweets");
-			
-			if (wb != null) {
+			wb.write(bos);
+			bos.writeTo(zos);
+    		zos.closeEntry();
+    		
+			/*if (wb != null) {
 	            OutputStream os = response.getOutputStream();
 	            wb.write(os);
-	        }
-			
+	        }*/
+    		zos.putNextEntry(new ZipEntry("Edges.csv"));
+    		bos = new ByteArrayOutputStream();
 			wb = getEdges(Integer.parseInt(searchId),"Edges");
-			
+			wb.write(bos);
+			bos.writeTo(zos);
+    		zos.closeEntry();
+			/*
 			if (wb != null) {
 	            OutputStream os = response.getOutputStream();
 	            wb.write(os);
+	            
 	        }
-			
+			*/
+    		zos.putNextEntry(new ZipEntry("Nodes.csv"));
+    		bos = new ByteArrayOutputStream();
 			wb = getNodes(Integer.parseInt(searchId),"Nodes");
-			
+			wb.write(bos);
+			bos.writeTo(zos);
+    		zos.closeEntry();
+			/*
 			if (wb != null) {
 	            OutputStream os = response.getOutputStream();
 	            wb.write(os);
 	        }
+	        */
+	        
+	        zos.close();
 			
 		} catch (java.text.ParseException e) {
 			// TODO Auto-generated catch block
@@ -471,6 +506,8 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
             }
         }
     }
+    
+    
 }
 
 
