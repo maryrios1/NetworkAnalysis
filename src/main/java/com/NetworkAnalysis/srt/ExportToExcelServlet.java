@@ -71,8 +71,8 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 		rd.forward(request, response);*/
 		/*RequestDispatcher rd = request.getRequestDispatcher("views/excelreport.jsp");
 		rd.forward(request, response);*/
-		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        
+		//response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		response.setContentType("text/csv");
         Workbook wb;
 		try {
 			wb = getTweets(Integer.parseInt(searchId),"Tweets");
