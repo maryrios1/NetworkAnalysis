@@ -116,7 +116,7 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 	            
 	        }
 			*/
-    		zos.putNextEntry(new ZipEntry("Nodes.csv"));
+    		zos.putNextEntry(new ZipEntry("Nodes.csv"));//test
     		bos = new ByteArrayOutputStream();
 			wb = getNodes(Integer.parseInt(searchId),"Nodes");
 			wb.write(bos);
