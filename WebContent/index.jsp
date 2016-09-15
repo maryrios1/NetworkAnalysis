@@ -110,24 +110,16 @@
 		</br>
 			<div class="row 200%"  style="horizontal-align:block;" >
 				<div class="6u 12u$(xsmall)"  >
-					<input type="checkbox" id="cTwets" name="cTwets" checked>
-					<label for="cTwets" style="color:white">Tweets</label>
+					<input type="checkbox" id="cTweets" name="cTweets" checked>
+					<label for="cTweets" style="color:white">Tweets</label>
 				</div>
 				<div class="6u$ 12u$(xsmall)" style="color:white">
 					<input type="checkbox" id="cNormalNodes" name="cNormalNodes" checked>
-					<label for="cNormalNodes" style="color:white">Normal Nodes</label>
-				</div>
-				<div class="6u$ 12u$(xsmall)">
-					<input type="checkbox" id="cNormalRelations" name="cNormalRelations" >
-					<label for="cNormalRelations" style="color:white">Normal Relations</label>
+					<label for="cNormalNodes" style="color:white">Relaciones por Retweet/Mencionado/Contestado</label>
 				</div>
 				<div class="6u$ 12u$(xsmall)">
 					<input type="checkbox" id="cHashtagNodes" name="cHashtagNodes" >
-					<label for="cHashtagNodes" style="color:white">Hashtag Nodes</label>
-				</div>
-				<div class="6u$ 12u$(xsmall)">
-					<input type="checkbox" id="cHashtagRelations" name="cHashtagNodes" >
-					<label for="cHashtagNodes" style="color:white">Hashtag Nodes</label>
+					<label for="cHashtagNodes" style="color:white">Relaciones por Hashtag</label>
 				</div>
 			</div>
 			<table cellspacing="0" id="searchtable" >

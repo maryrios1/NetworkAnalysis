@@ -357,6 +357,33 @@ function stopRestartSearch(btn,id){
 
 function exportToExcel(btn,id){
 	var btnId = btn.id;
+	
 	//alert('The id of the buttonExcel is ' + btnId + ',  id: ' + id)
-	location.href = "ExportToExcel?SearchId=" + id;
+	location.href = "ExportToExcel?SearchId=" + id+"&NormalNodes=" + $('#cNormalNodes').is(":checked") + 
+	"&HashtagNodes=" + $('#cHashtagNodes').is(":checked") + "&Tweets=" +$('#cTweets').is(":checked");
+	
+	//alert('The id of the button is ' + btnId + ',  id: ' + id + ', value: ' + btn.value)
+	var formData;
+	
+	formData = {
+            'NormalNodes'   : $('#cNormalNodes').is(":checked"),
+            'HashtagNodes'  : $('#cHashtagNodes').is(":checked"),
+            'Tweets'      	: $('#cTweets').is(":checked"),
+            'SearchId'		: id
+        };
+/*
+	$.ajax({
+        type: 'POST', // define the type of HTTP verb we want to use (POST for our form)
+        url: 'ExportToExcel', // the url where we want to POST
+        data: formData, // our data object
+        dataType: 'text', // what type of data do we expect back from the server
+        encode: true,
+        beforeSend: function(){
+        	
+        },
+        success: function(data){
+        	window.location.href = data;
+        }
+    });*/
+    	
 }

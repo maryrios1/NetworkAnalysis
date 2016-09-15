@@ -8,12 +8,15 @@ public class GlobalVariables {
 	String DB = "TwitterDB";
 	String HOST = "fixtweetstest.coh6dv3qg5l4.us-west-2.rds.amazonaws.com";
 	String PORT = "1531";
+	String FILE_PATH="E:\\Maestria\\Tesis\\Gephi_Test\\";
 	
 	public GlobalVariables() {
 		//local
-		connection = "http://localhost:8080/NetworkAnalysis/";
+		//connection = "http://localhost:8080/NetworkAnalysis/";
+		FILE_PATH="E:\\Maestria\\Tesis\\Gephi_Test\\";
 		//amazon
-		//connection = "http://localhost/NetworkAnalysis/";
+		connection = "http://localhost/NetworkAnalysis/";
+		//FILE_PATH="\\var\\";
 	}
 
 	public String getConnection() {
@@ -62,6 +65,14 @@ public class GlobalVariables {
 
 	public void setPORT(String pORT) {
 		PORT = pORT;
+	}
+
+	public String getFILE_PATH() {
+		return FILE_PATH;
+	}
+
+	public void setFILE_PATH(String fILE_PATH) {
+		FILE_PATH = fILE_PATH;
 	}
 }
 

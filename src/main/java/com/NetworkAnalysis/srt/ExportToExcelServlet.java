@@ -1,8 +1,14 @@
 package com.NetworkAnalysis.srt;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -15,6 +21,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import org.json.simple.parser.ParseException;
+import org.supercsv.cellprocessor.ConvertNullTo;
+import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.io.CsvBeanWriter;
+import org.supercsv.io.CsvResultSetWriter;
+import org.supercsv.prefs.CsvPreference;
 
 import com.NetworkAnalysis.rsc.ConnectionRDBMS;
 import com.NetworkAnalysis.rsc.Edge;
@@ -69,6 +80,11 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 		 * ).append(request.getContextPath());
 		 */
 		String searchId = request.getParameter("SearchId");
+		String tweet = request.getParameter("Tweets");
+		String normalNodes = request.getParameter("NormalNodes");
+		String hashtagNodes = request.getParameter("HashtagNodes");
+		
+		System.out.println(searchId + " Tweets? " + tweet + " Normal? " + normalNodes + " Hashtag? " + hashtagNodes);
 		
 /*
 		RequestDispatcher rd = request.getRequestDispatcher("report.jsp");
@@ -80,55 +96,67 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 		//response.setContentType("text/csv");
 		//response.setHeader("Content-disposition","inline; filename="+ "Tweets_SearchId_" + searchId + ".csv");
 		response.setContentType("application/zip");
-        response.setHeader("Content-Disposition", "attachment; filename=\"allfiles.zip\"");
+        response.setHeader("Content-Disposition", "attachment; filename=\"allfiles_" + searchId + ".zip\"");
 
         Workbook wb;
        
         OutputStream os = response.getOutputStream();
         ZipOutputStream zos = new ZipOutputStream(os);
-		zos.putNextEntry(new ZipEntry("Tweets.csv"));
+		
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        		/*workbook.write(bos);
-        		
-        		bos.writeTo(zos);
-        		zos.closeEntry();*/
         
 		try {
-			wb = getTweets(Integer.parseInt(searchId),"Tweets");
-			wb.write(bos);
-			bos.writeTo(zos);
-    		zos.closeEntry();
-    		
-			/*if (wb != null) {
-	            OutputStream os = response.getOutputStream();
-	            wb.write(os);
-	        }*/
-    		zos.putNextEntry(new ZipEntry("Edges.csv"));
-    		bos = new ByteArrayOutputStream();
-			wb = getEdges(Integer.parseInt(searchId),"Edges");
-			wb.write(bos);
-			bos.writeTo(zos);
-    		zos.closeEntry();
-			/*
-			if (wb != null) {
-	            OutputStream os = response.getOutputStream();
-	            wb.write(os);
-	            
-	        }
-			*/
-    		zos.putNextEntry(new ZipEntry("Nodes.csv"));//test
-    		bos = new ByteArrayOutputStream();
-			wb = getNodes(Integer.parseInt(searchId),"Nodes");
-			wb.write(bos);
-			bos.writeTo(zos);
-    		zos.closeEntry();
-			/*
-			if (wb != null) {
-	            OutputStream os = response.getOutputStream();
-	            wb.write(os);
-	        }
-	        */
-	        
+			if(tweet.equals("true")){
+				zos.putNextEntry(new ZipEntry("Tweets_" + searchId + ".xlsx"));
+				//FileWriter sWriter = getTweets2(Integer.parseInt(searchId),"Tweets");
+				//OutputStream f = new FileOutputStream(global.getFILE_PATH() + "Tweets_" + searchId + ".csv");
+				//f.write(b, off, len);
+				//byte[] bytes = sWriter.toString().getBytes("UTF-8");
+				
+				//bos.write(bytes);
+				
+				wb = getTweets(Integer.parseInt(searchId),"Tweets");
+				wb.write(bos);
+				bos.writeTo(zos);
+	    		zos.closeEntry();
+			}
+			
+			if(normalNodes.equals("true")){
+	    		//Export relations
+				zos.putNextEntry(new ZipEntry("Edges_" + searchId + ".xlsx"));
+	    		bos = new ByteArrayOutputStream();
+				wb = getEdges(Integer.parseInt(searchId),"Tweet");
+				wb.write(bos);
+				bos.writeTo(zos);
+	    		zos.closeEntry();
+	    		
+    			//Export nodes
+	    		zos.putNextEntry(new ZipEntry("Nodes_" + searchId + ".xlsx"));//test
+	    		bos = new ByteArrayOutputStream();
+				wb = getNodes(Integer.parseInt(searchId),"Tweet");
+				wb.write(bos);
+				bos.writeTo(zos);
+	    		zos.closeEntry();
+			}
+			
+			if(hashtagNodes.equals("true")){
+	    		//Export relations
+				zos.putNextEntry(new ZipEntry("EdgesHashtag_" + searchId + ".xlsx"));
+	    		bos = new ByteArrayOutputStream();
+				wb = getEdges(Integer.parseInt(searchId),"Hashtag");
+				wb.write(bos);
+				bos.writeTo(zos);
+	    		zos.closeEntry();
+	    		
+    			//Export nodes
+	    		zos.putNextEntry(new ZipEntry("NodesHashtag_" + searchId + ".xlsx"));//test
+	    		bos = new ByteArrayOutputStream();
+				wb = getNodes(Integer.parseInt(searchId),"Hashtag");
+				wb.write(bos);
+				bos.writeTo(zos);
+	    		zos.closeEntry();
+			}
+			
 	        zos.close();
 			
 		} catch (java.text.ParseException e) {
@@ -137,7 +165,49 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 		}
 
 	}
+	private FileWriter getTweets2(int searchId, String type) throws java.text.ParseException {
+		// TODO Auto-generated method stub		
+		
+		ConnectionRDBMS con = new ConnectionRDBMS(); 
+//		ArrayList<Tweet> listTweets =  con.getTweetBySearch(searchId, -1);
+		ResultSet rs =  con.getTweetBySearch(searchId, -1);
+		try
+	    {
+			 //StringWriter outFile = new StringWriter();
+			File f =  new File(global.getFILE_PATH() + "Tweet_" + searchId + ".csv");
+			FileWriter outFile = new FileWriter(f);
+		    // setup header for the file and processors. Notice the match between the header and the attributes of the
+		    // objects to write. The rules are that
+		    // - if optional "parent orders" are absent, write -1
+		    // - and optional user comments absent are written as ""
+		    String[] header = new String[] { "Id Str", "Screen name", "in_reply_to_user_id", "in_reply_to_screen_name","Text",
+		    		"Lang","possibly_sensitive","truncated","hashtags","user_mentions","usr_id_str","usr_id","location",
+		    		"created_at","source","retweet_count","retweeted","favorite_count","retweeted_user_id",
+		    		"retweeted_user_screen_name","mentioned_users_ids","mentioned_users_screen_names"};
+		    CellProcessor[] Processing = new CellProcessor[] { null, null, null, null,null,null, null, null, null,null,
+		    		null, null, null, null,null,null, null, null, null,null,null,null,null};
 
+		    // write the partial data
+			CsvResultSetWriter writer = new 	CsvResultSetWriter(outFile, CsvPreference.EXCEL_PREFERENCE);
+		    //writer.writeHeader(header);
+		    writer.write(rs, Processing);
+		    
+		    writer.close();
+
+		    // show output
+		    //System.out.println(outFile.toString());
+		    return outFile;
+						
+	    }
+	    catch(Exception ex)
+		{
+	    	System.out.println("ERROR:" + ex.getMessage());
+	    	return null;
+	    }
+		
+	}
+	
+	
 	private Workbook getTweets(int searchId, String type) throws java.text.ParseException {
 		// TODO Auto-generated method stub
 		SXSSFWorkbook wb = null;
@@ -159,6 +229,7 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 			//JSONObject json = (JSONObject) parser.parse(jsonTweets);
 			//JSONArray jArray = (JSONArray)parser.parse(jsonTweets);
 			wb = new SXSSFWorkbook(1000);
+			
             SXSSFSheet sheetPhases = (SXSSFSheet) wb.createSheet("Tweets");
             
             ExcelUtils excelUtils = new ExcelUtils(wb);            
@@ -219,8 +290,8 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 				tweet.setRetweet_count(rs.getLong("retweet_count"));
 				tweet.setRetweeted(rs.getBoolean("retweeted"));
 				tweet.setFavorite_count(rs.getLong("favorite_count"));
-				tweet.setTweet(rs.getString("tweet"));
-				tweet.setIdsearch(rs.getInt("idsearch"));
+				//tweet.setTweet(rs.getString("tweet"));
+				//tweet.setIdsearch(rs.getInt("idsearch"));
 				//retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names
 				tweet.setRetweeted_user_id(rs.getLong("retweeted_user_id"));
 				tweet.setRetweeted_user_screen_name(rs.getString("retweeted_user_screen_name"));
@@ -285,7 +356,7 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
             //Edges or relationships
             SXSSFSheet sheetEdges = (SXSSFSheet) wb.createSheet("Edges");
             ResultSet rs;
-            rs =  con.getEdgesBySearch(searchId, -1);
+            rs =  con.getEdgesBySearch(searchId, -1,type);
             //Edges Headers
             r = 0;
             rowEdges = sheetEdges.createRow(r++);
@@ -316,12 +387,12 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
                 createCell(rowEdges, 5, edge.getRelation(), null);
                 i++;
 			}
-            
+            /*
             System.out.println("Excel add nodes");
             //Edges or relationships
             SXSSFSheet sheetNodes = (SXSSFSheet) wb.createSheet("Nodes");
             rs=null;
-            rs =  con.getNodesBySearch(searchId, -1);
+            rs =  con.getNodesBySearch(searchId, -1,type);
             //Edges Headers
             r = 0;
             rowNodes = sheetNodes.createRow(r++);
@@ -345,7 +416,7 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
                 createCell(rowNodes, 2, node.getUrl(), null);
                 createCell(rowNodes, 3, node.getCount(), null);
                 i++;
-			}
+			}*/
             
 		} catch (Exception e) {//ParseException e) {
 			// TODO Auto-generated catch block
@@ -377,7 +448,7 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
             //Edges or relationships
             SXSSFSheet sheetNodes = (SXSSFSheet) wb.createSheet("Nodes");
             ResultSet rs=null;
-            rs =  con.getNodesBySearch(searchId, -1);
+            rs =  con.getNodesBySearch(searchId, -1,type);
             //Edges Headers
             r = 0;
             rowNodes = sheetNodes.createRow(r++);

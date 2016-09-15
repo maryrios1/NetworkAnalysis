@@ -941,13 +941,13 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			if (total == -1)
 				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
 						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,"
-						+ "source,retweet_count,retweeted,favorite_count,tweet,idsearch, "
+						+ "source,retweet_count,retweeted,favorite_count,"//tweet,idsearch, "
 						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
 						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at ;";
 			else
 				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
 						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,"
-						+ "source,retweet_count,retweeted,favorite_count,tweet,idsearch, "
+						+ "source,retweet_count,retweeted,favorite_count,"//tweet,idsearch, "
 						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
 						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at desc LIMIT " + total + ";";
 
@@ -978,13 +978,13 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			connect();
 			String sql = "";
 			if (total == -1)
-				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
+				sql = "SELECT id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
 						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,"
 						+ "source,retweet_count,retweeted,favorite_count,tweet,idsearch, "
 						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
 						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at ;";
 			else
-				sql = "SELECT id,id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
+				sql = "SELECT id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
 						+ "truncated,hashtags,user_mentions,usr_id_str,usr_id,location,created_at,"
 						+ "source,retweet_count,retweeted,favorite_count,tweet,idsearch, "
 						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
@@ -1099,7 +1099,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 		return edgesList;
 	}
 	
-	public ResultSet getEdgesBySearch(int idSearch, int total) {
+	public ResultSet getEdgesBySearch(int idSearch, int total,String type) {
 
 		ResultSet rs=null;
 		try {
@@ -1111,14 +1111,14 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 						+ "FROM edges e "
 						+ "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
 						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
-						+ "WHERE e.idsearch = " + idSearch + ";";
+						+ "WHERE e.idsearch = " + idSearch + " AND e.type = '" + type + "';";
 			else
 				sql = "SELECT n.id as ID1, n.label as sourcename, target as ID2, "
 						+ "n2.label as targetname, weight, name  " 
 						+ "FROM edges e " 
 						+ "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
 						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
-						+ "WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
+						+ "WHERE e.idsearch = " + idSearch + " AND e.type = '" + type + "' LIMIT " + total + ";";
 
 			System.out.println(sql);
 			/*preparedStatement = connect.prepareStatement(sql);
@@ -1178,7 +1178,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 		return nodesList;
 	}
 	
-	public ResultSet getNodesBySearch(int idSearch, int total) {
+	public ResultSet getNodesBySearch(int idSearch, int total,String type) {
 		ResultSet rs = null;
 
 		try {
@@ -1187,11 +1187,11 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			if (total == -1)
 				sql = "SELECT id, label,url,count " 
 						+ "FROM nodes e "
-						+ "WHERE e.idsearch = " + idSearch + ";";
+						+ "WHERE e.idsearch = " + idSearch + " AND type = '" + type + "';";
 			else
 				sql = "SELECT id, label,url,count " 
 						+ "FROM nodes e "
-						+ "WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
+						+ "WHERE e.idsearch = " + idSearch + " AND type = '" + type + "' LIMIT " + total + ";";
 
 			System.out.println(sql);
 			/*preparedStatement = connect.prepareStatement(sql);
