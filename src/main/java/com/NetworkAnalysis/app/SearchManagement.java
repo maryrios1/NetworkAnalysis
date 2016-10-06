@@ -4,7 +4,9 @@ import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -30,6 +32,7 @@ public class SearchManagement {
 
 	@GET
 	@Path("/StopRequest/{idSearch}")
+	//@Produces(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String StopRequest(@PathParam("idSearch") int idSearch) {
 		Search search =  new Search();
@@ -37,55 +40,53 @@ public class SearchManagement {
 		Message msg = new Message();
 		try {
 			search = updateRecordDB(idSearch, SearchType.SEARCH, Status.STOP);
-			if (search.getMessage().contains("OK")) {
-				msg.setMessage("Search stopped correctly ID: " + idSearch + ".");
-				msg.setCode(1);
-				msg.setStatus("OK");
-			} else {
-				msg.setMessage("Error stopping the search ID :" + idSearch + ".");
-				msg.setCode(0);
-				msg.setStatus("ERROR");
-			}
+			msg = search.getMessage();
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			msg.setMessage("Error stopping the search ID: " + idSearch + ", ERROR: " + e.getMessage());
-			msg.setCode(0);
+			msg.setCode(502);
 			msg.setStatus("ERROR");
+			msg.setObject("STOP");
 		}
 
 		return gson.toJson(msg);
+		//return msg;
 	}
 
 	@GET
 	@Path("/RestartRequest/{idSearch}/{type}/{relation}")
+	//@Produces(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String RestartRequest(@PathParam("idSearch") int idSearch, @PathParam("type") String type,
 			@PathParam("relation") String relation) {
 
 		Message temMsg =  new Message();
 		Gson gson = new Gson();
-		String msg = "";
+		//String msg = "";
 		try {
 
 			TwitterRequests tweet = new TwitterRequests();
 			SearchType searchType = SearchType.valueOf(type);
 			dbConnection = new ConnectionRDBMS();
 			System.out.println("RestartRequest type: " + type);
-
+			
 			Search search = dbConnection.getRecordSearch(idSearch);
-			if(search.getMessage().contains("ERROR")){
-				throw new Exception ("Error getting the search ID: " + idSearch);
+			if(search.message.getStatus().equals("ERROR")){
+				//throw new Exception ("Error getting the search ID: " + idSearch);
+				temMsg = search.getMessage();
+				return gson.toJson(temMsg);
+				//return temMsg;
 			}
 			
 			switch (searchType) {
 			case SEARCH:
-				msg = tweet.startSearchTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(),
+				temMsg = tweet.startSearchTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(),
 						Status.RESTART, idSearch);
 				break;
 			case STREAM:
-				msg = tweet.startStreamTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(), 
+				temMsg = tweet.startStreamTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(), 
 						Status.RESTART, idSearch);
 				break;
 			default:
@@ -96,12 +97,13 @@ public class SearchManagement {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			temMsg.setMessage("Error restarting the search ID: " + idSearch + ", ERROR: " + e.getMessage());
-			temMsg.setCode(0);
+			temMsg.setCode(502);
 			temMsg.setStatus("ERROR");
-			msg = gson.toJson(temMsg);
+			temMsg.setObject("RESTART");
+			//msg = gson.toJson(temMsg);
 		}
 
-		return msg;
+		return gson.toJson(temMsg);
 	}
 
 	@GET
@@ -133,13 +135,13 @@ public class SearchManagement {
 			dbConnection = new ConnectionRDBMS();
 			dbConnection.disableRecordSearch(idSearch, Status.DISABLE);
 			msg.setMessage("Search disabled correctly ID:" + idSearch + ".");
-			msg.setCode(1);
+			msg.setCode(100);
 			msg.setStatus("OK");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			msg.setMessage("Error disabling the search ID: " + idSearch + ", ERROR: " + e.getMessage());
-			msg.setCode(0);
+			msg.setCode(501);
 			msg.setStatus("ERROR");
 		}
 
@@ -158,14 +160,14 @@ public class SearchManagement {
 			dbConnection = new ConnectionRDBMS();
 			dbConnection.disableRecordSearch(idSearch, Status.ENABLE);
 			msg.setMessage("Search enable correctly ID:" + idSearch + ".");
-			msg.setCode(1);
+			msg.setCode(100);
 			msg.setStatus("OK");
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			msg.setMessage("Error enabling the search ID: " + idSearch + ", ERROR: " + e.getMessage());
-			msg.setCode(0);
+			msg.setCode(501);
 			msg.setStatus("ERROR");
 		}
 
@@ -185,7 +187,7 @@ public class SearchManagement {
 		ArrayList tweetsList = new ArrayList();
 		try {
 			ConnectionRDBMS connect = new ConnectionRDBMS();
-			//tweetsList = connect.getTweetBySearch(idSearch, total);
+			tweetsList = connect.getTweetBySearchJson(idSearch, total);
 		} catch (Exception ex) {
 			System.out.println("ERROR" + ex.getMessage());
 		}

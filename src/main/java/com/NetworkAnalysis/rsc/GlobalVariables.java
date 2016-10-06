@@ -1,6 +1,6 @@
 package com.NetworkAnalysis.rsc;
 
-public class GlobalVariables {
+public class GlobalVariables{
 
 	String connection;
 	String USER = "cgc_user";
@@ -12,12 +12,14 @@ public class GlobalVariables {
 	
 	public GlobalVariables() {
 		//local
-		//connection = "http://localhost:8080/NetworkAnalysis/";
+		connection = "http://localhost:8080/NetworkAnalysis/";
 		FILE_PATH="E:\\Maestria\\Tesis\\Gephi_Test\\";
 		//amazon
-		connection = "http://localhost/NetworkAnalysis/";
+		//connection = "http://localhost/NetworkAnalysis/";
 		//FILE_PATH="\\var\\";
 	}
+	
+	
 
 	public String getConnection() {
 		return connection;

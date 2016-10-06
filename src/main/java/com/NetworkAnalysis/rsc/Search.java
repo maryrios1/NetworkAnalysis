@@ -13,10 +13,12 @@ public class Search {
 	Boolean keepsearching;
 	String searchwords;
 	Boolean enable;
-	String message = "";
+	public Message message ;
+	float tweetsNumber;
+	public Credential credential;
 
 	public Search(int iDSearch, String searchname, int iduser, Date startsearch, Date endsearch, Date lastupdate,
-			String type, Boolean keepsearching, String searchwords, Boolean enable) {
+			String type, Boolean keepsearching, String searchwords, Boolean enable,float tweetsNumber) {
 		super();
 		IDSearch = iDSearch;
 		this.searchname = searchname;
@@ -28,7 +30,9 @@ public class Search {
 		this.keepsearching = keepsearching;
 		this.searchwords = searchwords;
 		this.enable = enable;
-		message = "";
+		this.tweetsNumber = tweetsNumber;
+		message = new Message();
+		credential= new Credential();
 	}
 	
 	public Search()
@@ -36,6 +40,8 @@ public class Search {
 		IDSearch = -1;
 		enable = false;
 		keepsearching = false;
+		message = new Message();
+		credential= new Credential();
 	}
 
 	public int getIDSearch() {
@@ -118,12 +124,28 @@ public class Search {
 		this.enable = enable;
 	}
 	
-	public String getMessage() {
+	public Message getMessage() {
 		return message;
 	}
 	
-	public void setMessage(String message) {
+	public void setMessage(Message message) {
 		this.message = message;
+	}
+
+	public float getTweetsNumber() {
+		return tweetsNumber;
+	}
+
+	public void setTweetsNumber(float tweetsNumber) {
+		this.tweetsNumber = tweetsNumber;
+	}
+
+	public Credential getCredential() {
+		return credential;
+	}
+
+	public void setCredential(Credential credential) {
+		this.credential = credential;
 	}
 
 }

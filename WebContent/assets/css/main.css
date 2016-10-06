@@ -2177,26 +2177,31 @@
 	::-webkit-input-placeholder {
 		color: #999 !important;
 		opacity: 1.0;
+		font-style: italic;
 	}
 
 	:-moz-placeholder {
 		color: #999 !important;
 		opacity: 1.0;
+		font-style: italic;
 	}
 
 	::-moz-placeholder {
 		color: #999 !important;
 		opacity: 1.0;
+		font-style: italic;
 	}
 
 	:-ms-input-placeholder {
 		color: #999 !important;
 		opacity: 1.0;
+		font-style: italic;
 	}
 
 	.formerize-placeholder {
 		color: #999 !important;
 		opacity: 1.0;
+		font-style: italic;
 	}
 
 /* Box */

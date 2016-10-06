@@ -66,12 +66,7 @@
 					<h2>¿Que deseas buscar hoy?</h2>
 					</header>
 					Nombre de la búsqueda
-					<input type="text" name="SearchName">
-					<!-- 
-					<p>
-						Escribe las palabras clave separadas por espacio.<br>
-						Ejemplo: "Facebook" "fb" "face"
-					</p> -->
+					<input type="text" name="SearchName" placeholder="EleccionesUSA2016" required>									
 					</br>
 					Tipo de búsqueda
 					<div class="12u$">
@@ -83,14 +78,16 @@
 						</div>
 					</div>
 					</br>
-					Palabra clave <br> <input type="text" name="keywords">
-					<br id="raro"> <br> <input type="submit"
-						value="Start Search" id="StartSearch">
-					<!-- 
-					<input type="submit" value="Export Data" id="ExportData"> 
-					<input type="submit" value="Show Graph" id="ShowGraph"> 
-					<input type="submit" value="Classify Tweets" id="ClassifyTweets">
-					 -->
+					Palabra clave
+					<br>
+					 
+					<input type="text" name="keywords" placeholder="Ejemplo: Facebook fb face ó Hillary,Trump" required>
+					<h6>
+						Escribe las palabras clave separadas por espacio (AND) o coma (OR).<br>						
+					</h6>
+					<br id="raro"> 
+					 
+					<input type="submit" value="Iniciar Búsqueda" id="StartSearch">
 				</form>
 
 
@@ -106,35 +103,47 @@
 	<section id="two" class="main style2">
 	<div class="container">
 	<input type="button" value="Mostrar Historial" id="showTable" />
+
 		<div id="tablediv" class="table-wrapper">
 		</br>
-			<div class="row 200%"  style="horizontal-align:block;" >
-				<div class="6u 12u$(xsmall)"  >
-					<input type="checkbox" id="cTweets" name="cTweets" checked>
+				<div class="row">
+				<div class="6u 12u$(medium)"  >
+					<input type="checkbox" id="cTweets" name="cTweets">
 					<label for="cTweets" style="color:white">Tweets</label>
-				</div>
-				<div class="6u$ 12u$(xsmall)" style="color:white">
+					
 					<input type="checkbox" id="cNormalNodes" name="cNormalNodes" checked>
 					<label for="cNormalNodes" style="color:white">Relaciones por Retweet/Mencionado/Contestado</label>
-				</div>
-				<div class="6u$ 12u$(xsmall)">
+					
 					<input type="checkbox" id="cHashtagNodes" name="cHashtagNodes" >
 					<label for="cHashtagNodes" style="color:white">Relaciones por Hashtag</label>
 				</div>
+				<div class="6u 12u$(medium)" style="color:white">
+
+					<input type="checkbox" id="cFavorito" name="cFavorito" onclick="showSelectNumber()" >
+					<label for="cFavorito" style="color:white">+ Favorito</label>
+					
+					<input type="checkbox" id="cRetweeted" name="cRetweeted" onclick="showSelectNumber()" >
+					<label for="cRetweeted" style="color:white">+ Retweeted</label>
+					<div id="selectNumber">
+						Límite de tweets
+						<input type="text" id="txtNumber" name="txtNumber" style="background: white;color:black" required >
+					</div>
+				</div>
 			</div>
+			
 			<table cellspacing="0" id="searchtable" >
 				    
 				<thead >
-					<tr >
-						        
-						<th scope="col" style="color:white">Search Name</th> 
-						<th scope="col" style="color:white">Words</th> 					                
-						<th scope="col" style="color:white">Start Search</th>         
-						<th scope="col" style="color:white">End Search</th>         
-						<th scope="col" style="color:white">Last Update</th>         
-						<th scope="col" style="color:white">Type</th>              
-						<th scope="col" style="color:white">Keep Searching</th>  
-						<th scope="col" style="color:white">Export</th>  
+					<tr >					        
+						<th scope="col" style="color:white">Nombre</th> 
+						<th scope="col" style="color:white">Palabras</th> 					                
+						<th scope="col" style="color:white">Inicio</th>         
+						<th scope="col" style="color:white">Final</th>         
+						<!-- <th scope="col" style="color:white">Última Actualización</th>  -->
+						<th scope="col" style="color:white">#Tweets</th>        
+						<th scope="col" style="color:white">Tipo</th>              
+						<th scope="col" style="color:white">Buscando</th>  
+						<th scope="col" style="color:white">Exportar</th>  
 					</tr>
 				</thead>
 			</table>
@@ -549,20 +558,21 @@ print 'It took ' + i + ' iterations to sort the deck.';</code></pre>
 	<!-- Footer -->
 	<section id="footer">
 	<ul class="icons">
-		<li><a href="#" class="icon alt fa-twitter"><span
+		<!--  <li><a href="#" class="icon alt fa-twitter"><span
 				class="label">Twitter</span></a></li>
 		<li><a href="#" class="icon alt fa-facebook"><span
 				class="label">Facebook</span></a></li>
 		<li><a href="#" class="icon alt fa-instagram"><span
-				class="label">Instagram</span></a></li>
-		<li><a href="#" class="icon alt fa-github"><span
+				class="label">Instagram</span></a></li>-->
+		<li><a href="https://github.com/xmaryposax/NetworkAnalysis" class="icon alt fa-github"><span
 				class="label">GitHub</span></a></li>
+		<!-- 
 		<li><a href="#" class="icon alt fa-envelope"><span
-				class="label">Email</span></a></li>
+				class="label">Email</span></a></li> -->
 	</ul>
 	<ul class="copyright">
-		<li>&copy; Untitled</li>
-		<li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+		<li>&copy; ITESO</li>
+		<!-- <li>Design: <a href="http://html5up.net">HTML5 UP</a></li> -->
 	</ul>
 	</section>
 </body>

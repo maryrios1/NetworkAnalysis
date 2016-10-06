@@ -33,15 +33,8 @@ import java.util.concurrent.Executor;
 */
 
 @Path("/")
-public class TwitterRequests {
-	static String consumerKeyStr = "Y8NvcZqWjUvNR0wfict2rSKmx";
-	static String consumerSecretStr = "A3K8YqVjLpTN5sSbk9MJ8DmiwIxRapLmyhmZcCau55sqzPjA1y";
-	static String accessTokenStr = "566064066-BMF8JBt2JI7c4KBWEDtxRqPN2rLNxwKcUoykzoTR";
-	static String accessTokenSecretStr = "wo4LnwlsYYfbYkGixN0CS3NxlYfXxbxwl0gWfpQTIKas4";
-	static String URL = "https://3821df9d-7bae-4fbe-82d1-4f2858f1af57-bluemix:4848e6b90b7dc6138e84f1c237e968ef73f2ad1c84e01582dce037334c575df3@3821df9d-7bae-4fbe-82d1-4f2858f1af57-bluemix.cloudant.com/test/";
-	static String STORAGE_DIR = "/tmp";
-	static long BYTES_PER_FILE = 64 * 1024 * 1024;
-	PreparedStatement preparedStatement = null;
+public class TwitterRequests {	
+
 	ConnectionRDBMS dbConnection = null;
 	HttpResponse response = null;
 	HttpGet httpGet = null;
@@ -59,23 +52,10 @@ public class TwitterRequests {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String GetSearchTweets(@PathParam("words") String words, @PathParam("relation") String relation,
 			@PathParam("searchName") String searchName, @PathParam("iduser") int IDUser
-	// ,@Suspended final AsyncResponse asyncResponse
 	) throws IOException {
-		/*
-		 * new Thread(new Runnable() {
-		 * 
-		 * @Override public void run() { String result =
-		 * veryExpensiveOperation(); asyncResponse.resume(result); }
-		 * 
-		 * private String veryExpensiveOperation() {
-		 */
-		String json = startSearchTweets(words, relation, searchName, IDUser, Status.START, 0);
-		return json;
-
-		/*
-		 * } }).start();
-		 */
-
+		Gson gson = new Gson();
+		Message msg = startSearchTweets(words, relation, searchName, IDUser, Status.START, 0);
+		return gson.toJson(msg);
 	}
 
 	@GET
@@ -86,20 +66,8 @@ public class TwitterRequests {
 			@PathParam("latitud") String latitud, @PathParam("longitud") String longitud
 	// ,@Suspended final AsyncResponse asyncResponse
 	) throws IOException {
-		/*
-		 * new Thread(new Runnable() {
-		 * 
-		 * @Override public void run() { String result =
-		 * veryExpensiveOperation(); asyncResponse.resume(result); }
-		 * 
-		 * private String veryExpensiveOperation() {
-		 */
 		String json = startSearchTweets(words, relation, searchName, IDUser, Status.START, 0, latitud, longitud);
 		return json;
-
-		/*
-		 * } }).start();
-		 */
 
 	}
 	
@@ -107,7 +75,6 @@ public class TwitterRequests {
 	@Path("/FixTweets/{idSearch}/{delete}/{start}/{total}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public void FixTweets( @PathParam("idSearch") int IdSearch,@PathParam("delete") int delete,@PathParam("start") int start,@PathParam("total") int total
-	// ,@Suspended final AsyncResponse asyncResponse
 	) throws IOException {
 		
 		dbConnection= new ConnectionRDBMS();
@@ -137,7 +104,7 @@ public class TwitterRequests {
 	 *            User who requested the search
 	 * @return Result of the search
 	 */
-	public String startSearchTweets(String words, String relation, String searchName, int IDUSer, Status status,
+	public Message startSearchTweets(String words, String relation, String searchName, int IDUSer, Status status,
 			int idSearch) {
 		Boolean KeepSearch = true;
 		String line = "";
@@ -146,9 +113,21 @@ public class TwitterRequests {
 		Message msg = new Message();
 		Gson gson = new Gson();
 		try {
+			
+			if (status == Status.START) {
+				search = insertRecordDB(searchName, IDUSer, SearchType.SEARCH, words);
+			} else
+				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.RESTART);
+			
+			Credential credential = search.getCredential();
+			msg = search.getMessage();
+			
+			if(msg.getStatus().equals("ERROR"))
+				return msg;
+				
 			// Connect to twiter API
-			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(consumerKeyStr, consumerSecretStr);
-			oAuthConsumer.setTokenWithSecret(accessTokenStr, accessTokenSecretStr);
+			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(credential.getConsumerKeyStr(),credential.getConsumerSecretStr());
+			oAuthConsumer.setTokenWithSecret(credential.getAccessTokenStr(),credential.getAccessTokenSecretStr());
 
 			httpGet = new HttpGet("https://api.twitter.com/1.1/search/tweets.json?q=" + words + "&count=500");
 
@@ -160,15 +139,10 @@ public class TwitterRequests {
 			System.out.println(statusCode + " : " + response.getStatusLine().getReasonPhrase());
 			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			String templine = "";
-			Boolean tweetsFound = false;
-
-			if (status == Status.START) {
-				search = insertRecordDB(searchName, IDUSer, SearchType.SEARCH, words);
-			} else
-				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.RESTART);
+			Boolean tweetsFound = false;			
 
 			// Read the tweets according the search
-			while (KeepSearch && search.getMessage().contains("OK")) {
+			while (KeepSearch && msg.getStatus().equals("OK")) {
 				line = reader.readLine();
 				// if the line is null finish
 				if (line == null) {
@@ -211,29 +185,31 @@ public class TwitterRequests {
 
 			search = updateRecordDB(search.getIDSearch(), SearchType.valueOf(search.getType()), Status.STOP);
 
-			if (search.getMessage().contains("ERROR")) {
-				return gson.toJson(msg);
+			if (search.getMessage().getStatus().equals("ERROR")) {
+				return search.getMessage();
 			}
 
 			if (tweetsFound) {
 				System.out.println("Search tweets finished");
 				msg.setMessage("Search tweets finished");
-				msg.setCode(1);
+				msg.setCode(100);
 				msg.setStatus("OK");
+				msg.setObject("RESTART");
 			} else {
 				System.out.println("Tweets not found");
 				msg.setMessage("Tweets not found request finished");
-				msg.setCode(2);
+				msg.setCode(101);
 				msg.setStatus("OK");
+				msg.setObject("RESTART");
 			}
 
 		} catch (Exception ex) {
-			msg.setMessage(ex.getMessage());
-			msg.setCode(0);
+			msg.setMessage("ERROR: " + ex.getMessage());
+			msg.setCode(502);
 			msg.setStatus("ERROR");
-			return gson.toJson(msg);
+			return msg;
 		} finally {
-			return gson.toJson(msg);
+			return msg;
 		}
 	}
 
@@ -246,9 +222,21 @@ public class TwitterRequests {
 		Message msg = new Message();
 		Gson gson = new Gson();
 		try {
+			
+			if (status == Status.START) {
+				search = insertRecordDB(searchName, IDUSer, SearchType.SEARCH, words);
+			} else
+				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.RESTART);
+			
+			Credential credential = search.getCredential();
+			msg = search.getMessage();
+			
+			if(msg.getStatus().equals("ERROR"))
+				return gson.toJson(msg);
+			
 			// Connect to twiter API
-			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(consumerKeyStr, consumerSecretStr);
-			oAuthConsumer.setTokenWithSecret(accessTokenStr, accessTokenSecretStr);
+			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(credential.getConsumerKeyStr(), credential.getConsumerSecretStr());
+			oAuthConsumer.setTokenWithSecret(credential.getAccessTokenStr(), credential.getAccessTokenSecretStr());
 			String url = "https://api.twitter.com/1.1/search/tweets.json?q=&geocode="
 					+ latitud + "," + longitud + ",10km&count=500";
 			System.out.println(url);
@@ -262,15 +250,10 @@ public class TwitterRequests {
 			System.out.println(statusCode + " : " + response.getStatusLine().getReasonPhrase());
 			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			String templine = "";
-			Boolean tweetsFound = false;
-
-			if (status == Status.START) {
-				search = insertRecordDB(searchName, IDUSer, SearchType.SEARCH, words);
-			} else
-				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.RESTART);
+			Boolean tweetsFound = false;			
 
 			// Read the tweets according the search
-			while (KeepSearch && search.getMessage().contains("OK")) {
+			while (KeepSearch && msg.getStatus().equals("OK")) {
 				line = reader.readLine();
 				// if the line is null finish
 				if (line == null) {
@@ -313,25 +296,25 @@ public class TwitterRequests {
 
 			search = updateRecordDB(search.getIDSearch(), SearchType.valueOf(search.getType()), Status.STOP);
 
-			if (search.getMessage().contains("ERROR")) {
-				return gson.toJson(msg);
+			if (search.getMessage().getStatus().equals("ERROR")) {
+				return gson.toJson(search.getMessage());
 			}
 
 			if (tweetsFound) {
 				System.out.println("Search tweets finished");
-				msg.setMessage("Search tweets finished");
-				msg.setCode(1);
+				msg.setMessage("Search tweets finished.");
+				msg.setCode(100);
 				msg.setStatus("OK");
 			} else {
 				System.out.println("Tweets not found");
-				msg.setMessage("Tweets not found request finished");
-				msg.setCode(2);
+				msg.setMessage("Tweets not found request finished.");
+				msg.setCode(101);
 				msg.setStatus("OK");
 			}
 
 		} catch (Exception ex) {
 			msg.setMessage(ex.getMessage());
-			msg.setCode(0);
+			msg.setCode(502);
 			msg.setStatus("ERROR");
 			return gson.toJson(msg);
 		} finally {
@@ -344,16 +327,12 @@ public class TwitterRequests {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String GetStreamTweets(@PathParam("word") String word, @PathParam("relation") String relation,
 			@PathParam("searchName") String searchName, @PathParam("iduser") int IDUser) throws IOException {
-		String jsonResult = startStreamTweets(word, relation, searchName, IDUser, Status.START, 0);
-/*
- * tweet.startStreamTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(), 
-						Status.RESTART, idSearch);
- * 
- * */
-		return jsonResult;
+		Gson gson = new Gson();
+		Message msg = startStreamTweets(word, relation, searchName, IDUser, Status.START, 0);
+		return gson.toJson(msg);
 	}
 
-	public String startStreamTweets(String word, String relation, String searchName, int idUSer, Status status,
+	public Message startStreamTweets(String word, String relation, String searchName, int idUSer, Status status,
 			int idSearch) {
 		String line = "";
 		Search search = new Search();
@@ -367,8 +346,23 @@ public class TwitterRequests {
 		Boolean tweetsFound = false;
 		
 		try {
-			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(consumerKeyStr, consumerSecretStr);
-			oAuthConsumer.setTokenWithSecret(accessTokenStr, accessTokenSecretStr);
+			// Insert or update the search
+			if (status.equals(Status.START)) {
+				search = insertRecordDB(searchName, idUSer, SearchType.STREAM, word);				
+			} else
+				search = updateRecordDB(idSearch, SearchType.STREAM, Status.RESTART);
+			
+			Credential credential = search.getCredential();
+			msg = search.getMessage();
+			
+			if(msg.getStatus().equals("ERROR"))
+			{
+				updateRecordDB(idSearch, SearchType.STREAM, Status.STOP);
+				return msg;
+			}
+			
+			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(credential.getConsumerKeyStr(), credential.getConsumerSecretStr());
+			oAuthConsumer.setTokenWithSecret(credential.getAccessTokenStr(), credential.getAccessTokenSecretStr());
 
 			httpGet = new HttpGet("https://stream.twitter.com/1.1/statuses/filter.json?delimited=length&track=" + word);
 
@@ -379,20 +373,26 @@ public class TwitterRequests {
 			response = client.execute(httpGet);
 
 			int statusCode = response.getStatusLine().getStatusCode();
-			System.out.println(statusCode + " : " + response.getStatusLine().getReasonPhrase());
+			String responseMessage = response.getStatusLine().getReasonPhrase();
+			System.out.println(statusCode + " : " + responseMessage);
 
+			if(responseMessage.contains("Authorization Required") ||responseMessage.contains("Enhance Your Calm")){
+				// Stop the logical search in the database
+				search = updateRecordDB(idSearch, SearchType.STREAM, Status.STOP);
+				msg.setCode(statusCode);
+				msg.setMessage("ERROR Credencial: " + responseMessage);
+				msg.setObject(status.RESTART.toString());
+				msg.setStatus("ERROR");
+				return msg;
+			}
+								
 			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			System.out.println("GetStreamTweets 2");
 			String templine = "";
 			int i = 0;
+			
 
-			if (status.equals(Status.START)) {
-				search = insertRecordDB(searchName, idUSer, SearchType.STREAM, word);
-				msg.setStatus("OK");
-			} else
-				search = updateRecordDB(idSearch, SearchType.STREAM, Status.RESTART);
-
-			while (KeepSearch && search.getMessage().contains("OK")) {
+			while (KeepSearch && msg.getStatus().equals("OK")) {
 				line = reader.readLine();
 
 				if (line == null) {
@@ -409,7 +409,7 @@ public class TwitterRequests {
 
 					try {
 						// check if the line is a json value
-						System.out.println("#" + i++ + ": " + line);
+						i++;
 						obj = parser.parse(line);
 						jsonObject = (JSONObject) obj;
 						insertTweetMySQLDB(line, RelationshipSearch.valueOf(relation), search.getIDSearch());
@@ -420,6 +420,7 @@ public class TwitterRequests {
 						}
 
 					} catch (Exception exjson) {
+						System.out.println("#" + i + ": " + line);
 						continue;
 					}
 				}
@@ -427,29 +428,31 @@ public class TwitterRequests {
 			}
 			search = updateRecordDB(search.getIDSearch(), SearchType.STREAM, Status.STOP);
 
-			if (search.getMessage().contains("ERROR")) {
-				return gson.toJson(msg);
-			}
+			if (search.getMessage().getStatus().equals("ERROR")) 
+				return search.getMessage();
+			
 
 			if (tweetsFound) {
 				System.out.println("Search tweets finished");
-				msg.setMessage("Search tweets finished");
-				msg.setCode(1);
+				msg.setMessage("Búsqueda de tweets terminada.");
+				msg.setCode(101);
 				msg.setStatus("OK");
+				msg.setObject(Status.RESTART.toString());
 			} else {
 				System.out.println("Tweets not found");
-				msg.setMessage("Tweets not found request finished");
-				msg.setCode(2);
+				msg.setMessage("Tweets no encontrados, solicitud terminada.");
+				msg.setCode(101);
 				msg.setStatus("OK");
+				msg.setObject(Status.RESTART.toString());
 			}
 
 		} catch (Exception ex) {
 			msg.setMessage(ex.getMessage());
-			msg.setCode(0);
+			msg.setCode(502);
 			msg.setStatus("ERROR");
-			return gson.toJson(msg);
+			return msg;
 		} finally {
-			return gson.toJson(msg);
+			return msg;
 		}
 
 	}
@@ -458,9 +461,9 @@ public class TwitterRequests {
 		int status = -1;
 		try {
 			dbConnection = new ConnectionRDBMS();
-			status = dbConnection.insert(text, TableType.NODE, relation, idSearch);
-			status = dbConnection.insert(text, TableType.EDGE, relation, idSearch);
-			status = dbConnection.insert(text, TableType.TWEET, relation, idSearch);
+			status = dbConnection.insert(text, relation, idSearch);
+			/*status = dbConnection.insert(text, TableType.NODE, relation, idSearch);
+			status = dbConnection.insert(text, TableType.EDGE, relation, idSearch);*/			
 		} catch (Exception ex) {
 			System.out.println("ERROR insert: " + ex.getMessage());
 		}

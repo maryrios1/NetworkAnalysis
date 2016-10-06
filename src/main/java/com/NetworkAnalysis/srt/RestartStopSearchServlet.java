@@ -53,8 +53,6 @@ public class RestartStopSearchServlet extends HttpServlet implements GlobalVaria
 		System.out.println("keywords:" + typeAction);
 		System.out.println("idSearch: " + idSearch);
 		System.out.println("type: " + type);
-		// "/StopRequest/{idSearch}"
-		// "/RestartRequest/{idSearch}/{type}/{relation}"
 		String url = "";
 		System.out.print(REST_URI + "rest/" );
 		if (typeAction.equals("RESTART"))
@@ -64,26 +62,20 @@ public class RestartStopSearchServlet extends HttpServlet implements GlobalVaria
 		
 		System.out.println(url);
 		ClientConfig config = new DefaultClientConfig();
-		Client client = Client.create(config);
+		Client client = Client.create(config);		
 		WebResource service = client.resource(REST_URI);
-
-		WebResource addService = service.path("rest").path(url);
-
-		System.out.println("GetTweets Response: " + getResponse(addService));
+		//WebResource addService = service.path("rest").path(url);
+		response.getWriter().print((service.path("rest").path(url)).accept(MediaType.TEXT_PLAIN).get(String.class));
+		//System.out.println("GetTweets Response: " + getResponse(addService));
+		//response.getWriter().print(getOutputAsJSON(addService));
 
 	}
 
 	private static String getResponse(WebResource service) {
-		/*
-		 * Response response = service.request().buildGet().invoke(); String y =
-		 * service.request().accept(MediaType.APPLICATION_JSON).get(String.class
-		 * ).toString(); String x =
-		 * response.readEntity(String.class).toString(); return x;
-		 */
 		return service.accept(MediaType.TEXT_PLAIN).get(ClientResponse.class).toString();
 	}
 
-	private static String getOutputAsXML(WebResource service) {
+	private static String getOutputAsJSON(WebResource service) {
 		return service.accept(MediaType.TEXT_PLAIN).get(String.class);
 	}
 

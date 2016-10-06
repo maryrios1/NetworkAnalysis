@@ -1,18 +1,22 @@
 package com.NetworkAnalysis.rsc;
 
+import java.util.Date;
+
 public class Edge {
 
 	public Node nodeSource;
 	public Node nodeTarget;
 	int weight;
 	String relation;
+	Date timeinterval;
 	
-	public Edge(Node nodeSource, Node nodeTarget, int weight, String relation) {
+	public Edge(Node nodeSource, Node nodeTarget, int weight, String relation, Date timeinterval) {
 		super();
 		this.nodeSource = nodeSource;
 		this.nodeTarget = nodeTarget;
 		this.weight = weight;
 		this.relation = relation;
+		this.timeinterval = timeinterval;
 	}
 
 	public Node getNodeSource() {
@@ -51,6 +55,14 @@ public class Edge {
 		nodeSource =  new Node();
 		nodeTarget =  new Node();
 		// TODO Auto-generated constructor stub
+	}
+	
+	public Date getTimeinterval() {
+		return timeinterval;
+	}
+
+	public void setTimeinterval(Date timeinterval) {
+		this.timeinterval = timeinterval;
 	}
 
 }

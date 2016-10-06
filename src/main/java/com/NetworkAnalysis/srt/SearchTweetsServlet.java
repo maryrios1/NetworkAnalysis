@@ -91,51 +91,39 @@ public class SearchTweetsServlet extends HttpServlet implements GlobalVariablesI
         SEARCH_TYPE = request.getParameter("SearchType");
         System.out.println("keywords:" + keywords);
         System.out.println("SearchName: " + SEARCH_NAME);
-        System.out.println("SearchType: " + SEARCH_TYPE);
-        
-        
-        /*
-        Client client = ClientBuilder.newClient();
-        WebTarget addService = client.target("REST_URI").path("rest").path(SEARCH_TWEETS + keywords);
-        String jsonString = getResponse(addService);
-        System.out.println("GetTweets Response: " + jsonString);
-        JSONParser parser = new JSONParser();
-        Object obj = parser.parse(jsonString);
-        JSONObject jsonObject = (JSONObject) obj;
-        response.getWriter( ).write(jsonObject.toJSONString());*/
+        System.out.println("SearchType: " + SEARCH_TYPE);              
         
         ClientConfig config = new DefaultClientConfig();
 		Client client = Client.create(config);
 		
 		WebResource service = client.resource(REST_URI);
-		//service.header("Content-Type", "application/json;charset=UTF-8");
 		String asd = REST_URI + "rest" + SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1";
 		WebResource addService;
-		
-		if (SEARCH_TYPE.equals("Search"))
-			addService = service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1");
-		else
-			addService = service.path("rest").path(STREAM_TWEETS + keywords + "/REPLIED/" + SEARCH_NAME+ "/1");		
-		
-		System.out.println("GetTweets Response: " + getResponse(addService));
-		/*JSONParser parser = new JSONParser();
-		Object obj = parser.parse(getOutputAsXML(addService));
-		JSONObject jsonObject = (JSONObject) obj;
-		*/
-		//response.getWriter( ).write(jsonObject.toJSONString());
-		//response.getWriter().print(jsonObject.toJSONString());
+		try{
+			if (SEARCH_TYPE.equals("Search"))
+				addService = service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1");
+				//response.getWriter().print((service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1"))
+					//.accept(MediaType.TEXT_PLAIN).get(String.class));
+			else
+				addService = service.path("rest").path(STREAM_TWEETS + keywords + "/REPLIED/" + SEARCH_NAME+ "/1");
+				//response.getWriter().print((service.path("rest").path(STREAM_TWEETS + keywords + "/REPLIED/" + SEARCH_NAME+ "/1"))
+					//	.accept(MediaType.TEXT_PLAIN).get(String.class));		
+			
+			System.out.println("GetTweets Response: " + getResponse(addService));		
+			
+			response.getWriter().print(getOutputAsJSON(addService));
+		}
+		catch(Exception ex){
+			System.out.println("ERROR" + ex.getMessage());
+		}
         
     }
 	
 	private static String getResponse(WebResource service) {
-		/*Response response = service.request().buildGet().invoke();
-		String y = service.request().accept(MediaType.APPLICATION_JSON).get(String.class).toString();
-		String x = response.readEntity(String.class).toString();
-		return x;*/
 		return service.accept(MediaType.TEXT_PLAIN).get(ClientResponse.class).toString();
 	}
 	
-	private static String getOutputAsXML(WebResource service) {
+	private static String getOutputAsJSON(WebResource service) {
 		return service.accept(MediaType.TEXT_PLAIN).get(String.class);
 	}
 

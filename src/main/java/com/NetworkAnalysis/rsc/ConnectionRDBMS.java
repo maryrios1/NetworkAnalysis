@@ -1,6 +1,5 @@
 package com.NetworkAnalysis.rsc;
 
-import java.net.Proxy.Type;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,11 +11,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Locale;
-import java.util.TimeZone;
-import java.sql.Date;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -45,6 +40,19 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 		} catch (Exception ex) {
 			System.out.println("error in connect: " + ex.getMessage());
 		}
+	}
+	
+	public Connection connect(Connection conn) {
+		try {
+			System.out.println("connect2");
+			Class.forName("com.mysql.jdbc.Driver");
+			conn = DriverManager.getConnection("jdbc:mysql://" + HOST + ":" + PORT + "/" + DB + "?" + "user=" + USER
+					+ "&password=" + PASSWORD + "&useUnicode=true");// &characterEncoding=UTF-8
+			return conn;
+		} catch (Exception ex) {
+			System.out.println("error in connect2: " + ex.getMessage());
+		}
+		return null;
 	}
 
 	/***
@@ -94,26 +102,26 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 	 * @return
 	 * @throws Exception
 	 */
-	public int insert(String text, TableType type, RelationshipSearch relation, int idsearch) throws Exception {
+	public int insert(String text, RelationshipSearch relation, int idsearch) throws Exception {
 		// DB connection setup
 
 		int status = -1;
 		try {
 			connect();
-			switch (type) {
-			case NODE:
-				insertNodeDB(text, relation, idsearch);
-				break;
-			case EDGE:
+			/*switch (type) {
+			case TWEET:*/
+				insertTweetDB(text, relation, idsearch);				
+				/*break;
+			case EDGE:*/
 				insertEdgeDB(text, relation, idsearch);
-				break;
-			case TWEET:
-				insertTweetDB(text, relation, idsearch);
-				break;
+				/*break;
+			case NODE:*/
+				insertNodeDB(text, relation, idsearch);
+				/*break;
 			default:
 				break;
 
-			}
+			}*/
 
 		} catch (Exception e) {
 			System.out.println("error1: " + e.getMessage() + " status: " + status);
@@ -169,6 +177,11 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			userString = jsonObject.get("user").toString();
 			jOUser = (JSONObject) parser.parse(userString);
 
+            //Get the date of the tweet
+            String dateString = jsonObject.get("created_at").toString();
+			java.util.Date dateUtil = getTwitterDate(dateString);
+			java.sql.Timestamp dateSql = new java.sql.Timestamp(dateUtil.getTime());
+			
 			preparedStatement.setLong(1, (long) jsonObject.get("id"));
 			preparedStatement.setString(2, jsonObject.get("id_str").toString());
 			preparedStatement.setString(3, jOUser.get("screen_name").toString());
@@ -209,28 +222,31 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
                     tempHash += hashtag + ",";
                     
                     preparedStatement2 = connect.prepareStatement(
-                            "INSERT INTO nodes (id,label,url,idsearch,type) "
-                                + "VALUES (?, ?, ?,?,'Hashtag' ) ON DUPLICATE KEY UPDATE count=count+1;");
+                            "INSERT INTO nodes (id,label,url,idsearch,type,timeinterval) "
+                                + "VALUES (?, ?, ?,?,'Hashtag',? ) ON DUPLICATE KEY UPDATE count=count+1;");
 
                     userString = jsonObject.get("user").toString();
                     jOUser = (JSONObject) parser.parse(userString);
+        			
                     //jOUser.get("screen_name").toString()
                     preparedStatement2.setString(1, hashtag);
                     preparedStatement2.setString(2, hashtag);
                     preparedStatement2.setString(3, null);
                     preparedStatement2.setInt(4, idsearch);
+                    preparedStatement2.setTimestamp(5, dateSql);
                     status = executeStatement(preparedStatement2);
                     //Insert relationship
                     preparedStatement2 = connect.prepareStatement(
-                                "INSERT INTO  edges (source,target,name,idsearch,type) "
-                                        + "VALUES (?, ?, ?,? ,'Hashtag') ON DUPLICATE KEY UPDATE weight=weight+1;");
+                                "INSERT INTO  edges (source,target,name,idsearch,type,timeinterval) "
+                                        + "VALUES (?, ?, ?,? ,'Hashtag',?) ON DUPLICATE KEY UPDATE weight=weight+1;");
 
                     userString = jsonObject.get("user").toString();
                     jOUser = (JSONObject) parser.parse(userString);
                     preparedStatement2.setString(1,  jOUser.get("id").toString());
                     preparedStatement2.setString(2,hashtag );
                     preparedStatement2.setString(3, "HASHTAG");
-                    preparedStatement2.setInt(4, idsearch);                    
+                    preparedStatement2.setInt(4, idsearch);  
+                    preparedStatement2.setTimestamp(5, dateSql);
                     status = executeStatement(preparedStatement2);
 				}
 				if (jArray.size() > 0) {
@@ -252,11 +268,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			if (jOUser.get("location") == null)
 				preparedStatement.setNull(14, 0);
 			else
-				preparedStatement.setString(14, jOUser.get("location").toString());
-
-			String dateString = jsonObject.get("created_at").toString();
-			java.util.Date dateUtil = getTwitterDate(dateString);
-			java.sql.Timestamp dateSql = new java.sql.Timestamp(dateUtil.getTime());
+				preparedStatement.setString(14, jOUser.get("location").toString());			
 
 			preparedStatement.setTimestamp(15, dateSql);
 
@@ -267,7 +279,6 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			preparedStatement.setString(20, jsonObject.toString());
 			preparedStatement.setInt(21, idsearch);
 			// added columns
-			System.out.println("new columns");
 
 			if (jsonObject.get("retweeted_status") != null) {
 				System.out.println("new retweeted_status");
@@ -288,7 +299,6 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			JSONObject jOEntities = (JSONObject) parser.parse(entitiesString);
 
 			if (jOEntities.get("user_mentions") != null) {
-				System.out.println("new user_mentions");
 				String idsTemp = "";
 				String screennamesTemp = "";
 				String userMentionesString = jOEntities.get("user_mentions").toString();
@@ -301,7 +311,6 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 					screennamesTemp += ((JSONObject) jAUsers.get(i)).get("screen_name").toString() + ",";
 				}
 
-				System.out.println("temp values :" + idsTemp + " --- " + screennamesTemp);
 				if (idsTemp.length() > 0 && screennamesTemp.length() > 0) {
 					idsTemp = idsTemp.substring(0, idsTemp.length() - 1);
 					screennamesTemp = screennamesTemp.substring(0, screennamesTemp.length() - 1);
@@ -347,13 +356,16 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			JSONObject jOUser = null;
 			JSONObject jOUser2 = null;
 
+			String dateString = jsonObject.get("created_at").toString();
+			java.util.Date dateUtil = getTwitterDate(dateString);
+			java.sql.Timestamp dateSql = new java.sql.Timestamp(dateUtil.getTime());			
+			
 			preparedStatement = connect.prepareStatement(
-					"INSERT INTO  edges (source,target,name,idsearch) VALUES (?, ?, ?,? ) ON DUPLICATE KEY UPDATE weight=weight+1;");
+					"INSERT INTO  edges (source,target,name,idsearch,timeinterval) VALUES (?, ?, ?,?,? ) ON DUPLICATE KEY UPDATE weight=weight+1;");
 
 			userString = jsonObject.get("user").toString();
 			jOUser = (JSONObject) parser.parse(userString);
-			preparedStatement.setString(1, jOUser.get("id").toString());
-			preparedStatement.setInt(4, idsearch);
+			
 
 			// Create relationship
 
@@ -367,6 +379,10 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 
 				// tweets
 				System.out.println("RETWEETED in");
+				preparedStatement.setString(1, jOUser.get("id").toString());
+				preparedStatement.setInt(4, idsearch);
+				preparedStatement.setTimestamp(5, dateSql);
+				
 				preparedStatement.setString(2, jOUser2.get("id").toString());
 				preparedStatement.setString(3, "RETWEETED");
 				status = executeStatement(preparedStatement);
@@ -376,7 +392,11 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			// This tweet was in reply to the user
 
 			if (jsonObject.get("in_reply_to_user_id") != null) {
-				System.out.println("replied in");
+				
+				preparedStatement.setString(1, jOUser.get("id").toString());
+				preparedStatement.setInt(4, idsearch);
+				preparedStatement.setTimestamp(5, dateSql);
+				
 				preparedStatement.setString(2,  jsonObject.get("in_reply_to_user_id").toString());
 				preparedStatement.setString(3, "REPLIED");
 				status = executeStatement(preparedStatement);
@@ -393,11 +413,14 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 				JSONArray jAUsers = (JSONArray) parser.parse(userMentionesString);
 
 				String tempHash = "";
-				System.out.print("Mentioned in ");
+
 
 				for (int i = 0; i < jAUsers.size(); i++) {
 					String tempUserMentionId = ((JSONObject) jAUsers.get(i)).get("id").toString();
-
+					preparedStatement.setString(1, jOUser.get("id").toString());
+					preparedStatement.setInt(4, idsearch);
+					preparedStatement.setTimestamp(5, dateSql);
+					
 					preparedStatement.setString(2,  ((JSONObject) jAUsers.get(i)).get("id").toString());
 					preparedStatement.setString(3, "MENTIONED");
 					status = executeStatement(preparedStatement);
@@ -450,16 +473,20 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			JSONObject jOUser = null;
 			JSONObject jOUser2 = null;
 
-			preparedStatement = connect.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) "
-					+ "VALUES (?, ?, ?,? ) ON DUPLICATE KEY UPDATE count=count+1;");
+			preparedStatement = connect.prepareStatement("INSERT INTO nodes (id,label,url,idsearch,timeinterval) "
+					+ "VALUES (?, ?, ?,?,? ) ON DUPLICATE KEY UPDATE count=count+1;");
 
 			userString = jsonObject.get("user").toString();
 			jOUser = (JSONObject) parser.parse(userString);
+			String dateString = jsonObject.get("created_at").toString();
+			java.util.Date dateUtil = getTwitterDate(dateString);
+			java.sql.Timestamp dateSql = new java.sql.Timestamp(dateUtil.getTime());			
 
 			preparedStatement.setString(1, jOUser.get("id").toString());
 			preparedStatement.setString(2, jOUser.get("screen_name").toString());
 			preparedStatement.setString(3, jOUser.get("profile_image_url_https").toString());
 			preparedStatement.setInt(4, idsearch);
+			preparedStatement.setTimestamp(5, dateSql);
 			status = executeStatement(preparedStatement);
 
 			// RETWEETED:
@@ -470,26 +497,30 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 				String userRetweetString = jORetweet.get("user").toString();
 				jOUser2 = (JSONObject) parser.parse(userRetweetString);
 
-				preparedStatement = connect
-						.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) VALUES (?, ?, ?,? )");
+				//preparedStatement = connect.prepareStatement("INSERT INTO nodes (id,label,url,idsearch,timeinterval) "
+					//	+ "VALUES (?, ?, ?,?,? ) ON DUPLICATE KEY UPDATE count=count+1;");
+				
 				preparedStatement.setString(1,  jOUser2.get("id").toString());
 				preparedStatement.setString(2, jOUser2.get("screen_name").toString());
 				preparedStatement.setString(3, jOUser2.get("profile_image_url_https").toString());
 				preparedStatement.setInt(4, idsearch);
+				preparedStatement.setTimestamp(5, dateSql);
 				status = executeStatement(preparedStatement);
+				//System.out.println("id:" + jOUser2.get("id").toString() + ",screen_name:" +jOUser2.get("screen_name").toString() 
+					//	+ ",url:" +jOUser2.get("profile_image_url_https").toString());
 
 			}
 
 			// REPLIED
 			if (jsonObject.get("in_reply_to_user_id") != null && jsonObject.get("in_reply_to_screen_name") != null) {
-				System.out.println("REPLIED!: " + jsonObject.get("in_reply_to_screen_name").toString());
-
-				preparedStatement = connect
-						.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) VALUES (?, ?, ?,? )");
+				//preparedStatement = connect.prepareStatement("INSERT INTO nodes (id,label,url,idsearch,timeinterval) "
+					//	+ "VALUES (?, ?, ?,?,? ) ON DUPLICATE KEY UPDATE count=count+1;");
+				
 				preparedStatement.setString(1, jsonObject.get("in_reply_to_user_id").toString());
 				preparedStatement.setString(2, jsonObject.get("in_reply_to_screen_name").toString());
 				preparedStatement.setString(3, "");
 				preparedStatement.setInt(4, idsearch);
+				preparedStatement.setTimestamp(5, dateSql);
 				status = executeStatement(preparedStatement);
 			}
 
@@ -504,19 +535,25 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 				for (int i = 0; i < jAUsers.size(); i++) {
 					String tempUserMentionId = ((JSONObject) jAUsers.get(i)).get("id").toString();
 
-					preparedStatement = connect
-							.prepareStatement("INSERT INTO nodes (id,label,url,idsearch) VALUES (?, ?, ?,? )");
+					//preparedStatement = connect.prepareStatement("INSERT INTO nodes (id,label,url,idsearch,timeinterval) "
+						//	+ "VALUES (?, ?, ?,?,? ) ON DUPLICATE KEY UPDATE count=count+1;");
 					preparedStatement.setString(1,  ((JSONObject) jAUsers.get(i)).get("id").toString());
 					preparedStatement.setString(2, ((JSONObject) jAUsers.get(i)).get("screen_name").toString());
 					preparedStatement.setString(3, "");
 					preparedStatement.setInt(4, idsearch);
+					preparedStatement.setTimestamp(5, dateSql);
 					status = executeStatement(preparedStatement);
 				}
 			}
 
 			// CONTRIBUTOR
 
-		} catch (Exception ex) {
+		} 
+		catch(SQLException exSQL){
+			System.out.println("ERROR NODE_DB_SQL: " + exSQL.getMessage());
+			throw exSQL;
+		}		
+		catch (Exception ex) {
 			System.out.println("ERROR NODE_DB: " + ex.getMessage());
 			throw ex;
 		}
@@ -549,7 +586,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			ResultSet rs = stmt.executeQuery();
 			while (rs.next()) {
 
-				int idsearch = (rs.getString("idsearch").contains("No hay credencial") ? -1 : rs.getInt("idsearch"));
+				int idsearch = (rs.getString("idsearch").contains("WARNING:") ? -1 : rs.getInt("idsearch"));
 
 				if (idsearch > 0) {
 					search.setIDSearch(idsearch);
@@ -557,21 +594,29 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 					search.setEndsearch(rs.getTimestamp("endsearch"));
 					search.setIduser(iduser);
 					search.setKeepsearching(rs.getBoolean("keepsearching"));
-					search.setLastupdate(rs.getTime("lastupdate"));
-					search.setMessage("OK");
+					search.setLastupdate(rs.getTimestamp("lastupdate"));
+					search.setMessage(new Message("Nueva búsqueda guardada.",100,"OK"));
 					search.setSearchname(searchname);
 					search.setSearchwords(searchwords);
 					search.setStartsearch(rs.getTimestamp("startsearch"));
 					search.setType(rs.getString("type"));
+					search.credential.setConsumerKeyStr(rs.getString("consumer_key_str"));
+					search.credential.setConsumerSecretStr(rs.getString("consumer_secret_str"));
+					search.credential.setAccessTokenStr(rs.getString("access_token_str"));
+					search.credential.setAccessTokenSecretStr(rs.getString("access_token_secret_str"));
+					
 				} else {
-					throw new Exception("ERROR not credential available.");
+					search.setMessage(new Message(rs.getString("idsearch"),501,"ERROR"));
 				}
 			}
 
 		} catch (Exception ex) {
 			System.out.println("ERROR SearchRecordI_DB: " + ex.getMessage());
-			search.setMessage("ERROR: " + ex.getMessage());
-			throw ex;
+			search.message.setMessage("ERROR: " + ex.getMessage());
+			search.message.setStatus("ERROR");
+			search.message.setCode(502);
+			search.message.setSource("ERROR SearchRecordI_DB");
+			//throw ex;
 		} finally {
 			try {
 				if (connect != null) {
@@ -580,7 +625,10 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 
 			} catch (Exception e) {
 				System.out.println("error2: " + e.getMessage());
-				search.setMessage("ERROR: " + e.getMessage());
+				search.message.setMessage("ERROR: " + e.getMessage());
+				search.message.setStatus("ERROR");
+				search.message.setCode(502);
+				search.message.setSource("ERROR SearchRecordI_DB");
 			}
 		}
 		return search;
@@ -600,39 +648,84 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 	 */
 	private Search updateRecordSearch(int idSearch, SearchType search, Status action) throws Exception {
 		Search src = new Search();
+		Message msg =  new Message();
+		msg.setObject(action.toString());
+		msg.setSource("updateRecordSearch function");
+		ResultSet rs = null;
+		CallableStatement stmt = null;
+		Connection conn = null;
 		try {
-			connect();
+			conn = connect(conn);
+			stmt = conn.prepareCall("{ call UpdateSearchCredential(?,?,?) }");
+			stmt.setInt(1, idSearch);
+			stmt.setString(2, search.toString());
+			stmt.setString(3, action.toString());			
 
-			if (action.equals(Status.STOP)) {
-				preparedStatement = connect.prepareStatement(
-						"UPDATE search SET keepsearching = ?, endsearch = now() WHERE idsearch = ? ;");
-				preparedStatement.setBoolean(1, false);
-			} else {
-				preparedStatement = connect
-						.prepareStatement("UPDATE search set keepsearching = true, type = ?  WHERE idsearch = ? ;");
-				preparedStatement.setString(1, search.toString());
+			rs = stmt.executeQuery();
+			while (rs.next()) {
+
+				int idsearch = (rs.getString("idsearch").contains("WARNING:") ? -1 : rs.getInt("idsearch"));
+
+				if (idsearch > 0) {
+					src.setIDSearch(idsearch);
+					src.setEnable(rs.getBoolean("enable"));
+					src.setEndsearch(rs.getTimestamp("endsearch"));
+					//src.setIduser(iduser);
+					src.setKeepsearching(rs.getBoolean("keepsearching"));
+					src.setLastupdate(rs.getTimestamp("lastupdate"));
+					msg.setCode(100);
+					msg.setMessage("Actualización correcta: " + action.toString());
+					msg.setStatus("OK");
+					msg.setObject(rs.getBoolean("keepsearching")?"STOP":"RESTART");
+					src.setMessage(msg);					
+					src.setSearchname(rs.getString("searchname"));
+					src.setSearchwords(rs.getString("searchwords"));
+					src.setStartsearch(rs.getTimestamp("startsearch"));
+					//src.setTweetsNumber(tweetsNumber);
+					src.setType(rs.getString("type"));					
+					src.setCredential(new Credential(rs.getInt("idcredential"),rs.getString("consumer_key_str"),
+							rs.getString("consumer_secret_str"),rs.getString("access_token_str"),
+							rs.getString("access_token_secret_str"),true));					
+				}
+				else
+				{
+					msg.setCode(501);
+					msg.setStatus("ERROR");
+					msg.setMessage(rs.getString("idsearch"));
+					msg.setObject(action.toString());
+					src.setMessage(msg);
+				}
 			}
 
-			preparedStatement.setInt(2, idSearch);
-
-			executeStatement(preparedStatement);
-
-			src = getRecordSearch(idSearch);
-			src.setMessage("OK: Search updated correctly");
-
 		} catch (Exception ex) {
-			System.out.println("ERROR SearchRecordU_DB: " + ex.getMessage());
-			src.setMessage("ERROR SearchRecordU_DB: " + ex.getMessage());
-			throw ex;
+			System.out.println("ERROR SearchRecordU_DB: " + ex.getMessage());			
+			msg.setCode(502);
+			msg.setStatus("ERROR");
+			msg.setMessage("ERROR SearchRecordU_DB: " + ex.getMessage());
+			msg.setObject(action.toString());
+			src.setMessage(msg);
+			
 		} finally {
 			try {
-				if (connect != null) {
-					connect.close();
-				}
+				if (rs != null) {
+	                rs.close();
+	            }
+	            if (stmt != null) {
+	                stmt.close();
+	            }
+	            if (conn != null) {
+	            	conn.close();
+	            	conn = null;
+	            }
 
 			} catch (Exception e) {
 				System.out.println("error2: " + e.getMessage());
-				src.setMessage("ERROR2 SearchRecordU_DB: " + e.getMessage());
+				msg.setCode(502);
+				msg.setStatus("ERROR");
+				msg.setMessage("ERROR2 SearchRecordU_DB: " + e.getMessage());
+				msg.setObject(action.toString());
+				src.setMessage(msg);
+				
 				throw e;
 			}
 		}
@@ -729,6 +822,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 
 	public Search getRecordSearch(int idSearch) throws SQLException {
 		Search search = new Search();
+		search.message.setSource("getRecordSearch");
 		try {
 
 			connect();
@@ -749,14 +843,17 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 				search.setType(rs.getString("type"));
 				search.setKeepsearching(rs.getBoolean("keepsearching"));
 				search.setSearchwords(rs.getString("searchwords"));
-				search.setMessage("OK");
+				search.message.setMessage("Búsqueda encontrada.");
+				search.message.setStatus("OK");
 			}
 			rs.close();
 
 		} catch (Exception ex) {
-			search.setMessage("ERROR:" + ex.getMessage());
+			search.message.setMessage("ERROR:" + ex.getMessage());
+			search.message.setStatus("ERROR");
+			search.message.setCode(502);
 			System.out.println("ERROR: " + ex.getMessage());
-			throw ex;
+			//throw ex;
 		} finally {
 			try {
 				if (connect != null) {
@@ -764,9 +861,11 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 				}
 
 			} catch (Exception e) {
-				search.setMessage("ERROR2:" + e.getMessage());
+				search.message.setMessage("ERROR2:" + e.getMessage());
+				search.message.setStatus("ERROR");
+				search.message.setCode(502);
 				System.out.println("error2: " + e.getMessage());
-				throw e;
+				//throw e;
 			}
 		}
 
@@ -787,11 +886,14 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			connect();
 			String sql = "";
 			if (total == -1)
-				sql = "SELECT idsearch,searchname,iduser,startsearch,endsearch,lastupdate,type,keepsearching,searchwords "
-						+ "FROM search WHERE enable = true AND iduser = " + iduser + " ORDER BY startsearch ;";
+				sql = "SELECT s.idsearch,s.searchname,s.iduser,s.startsearch,s.endsearch,s.lastupdate,s.type,s.keepsearching,s.searchwords, "
+						+ " (SELECT COUNT(*) FROM tweet t WHERE t.idsearch = s.idsearch) AS tweetsnumber "
+						+ "FROM search s  WHERE s.enable = true AND s.iduser = " + iduser + " ORDER BY startsearch ;";
+
 			else
-				sql = "SELECT idsearch,searchname,iduser,startsearch,endsearch,lastupdate,type,keepsearching,searchwords "
-						+ "FROM search WHERE enable = true AND iduser = " + iduser + " ORDER BY startsearch desc LIMIT "
+				sql = "SELECT s.idsearch,s.searchname,s.iduser,s.startsearch,s.endsearch,s.lastupdate,s.type,s.keepsearching,s.searchwords, "
+						+ " (SELECT COUNT(*) FROM tweet t WHERE t.idsearch = s.idsearch) AS tweetsnumber "
+						+ "FROM search s  WHERE s.enable = true AND s.iduser = " + iduser + " ORDER BY startsearch desc LIMIT "
 						+ total + ";";
 
 			System.out.println(sql);
@@ -809,6 +911,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 				search.setType(rs.getString("type"));// 6
 				search.setKeepsearching(rs.getBoolean("keepsearching"));// 7
 				search.setSearchwords(rs.getString("searchwords"));// 8
+				search.setTweetsNumber(rs.getFloat("tweetsnumber"));//9
 				searchesList.add(search);
 
 			}
@@ -1106,18 +1209,14 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			connect();
 			String sql = "";
 			if (total == -1)
-				sql = "SELECT n.id as ID1, n.label as sourcename, target as ID2, "
-						+ "n2.label as targetname, weight, name  " 
-						+ "FROM edges e "
-						+ "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
-						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
+				sql = "SELECT source as ID1, target as ID2, "
+						+ "weight, name, timeinterval " 
+						+ "FROM edges e "												
 						+ "WHERE e.idsearch = " + idSearch + " AND e.type = '" + type + "';";
 			else
-				sql = "SELECT n.id as ID1, n.label as sourcename, target as ID2, "
-						+ "n2.label as targetname, weight, name  " 
-						+ "FROM edges e " 
-						+ "JOIN nodes n ON e.idsearch = n.idsearch and n.id = e.source "
-						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
+				sql = "SELECT source as ID1, target as ID2, "
+						+ "weight, name, timeinterval " 
+						+ "FROM edges e " 						
 						+ "WHERE e.idsearch = " + idSearch + " AND e.type = '" + type + "' LIMIT " + total + ";";
 
 			System.out.println(sql);
@@ -1185,11 +1284,11 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			connect();
 			String sql = "";
 			if (total == -1)
-				sql = "SELECT id, label,url,count " 
+				sql = "SELECT id, label,url,count,timeinterval " 
 						+ "FROM nodes e "
 						+ "WHERE e.idsearch = " + idSearch + " AND type = '" + type + "';";
 			else
-				sql = "SELECT id, label,url,count " 
+				sql = "SELECT id, label,url,count,timeinterval " 
 						+ "FROM nodes e "
 						+ "WHERE e.idsearch = " + idSearch + " AND type = '" + type + "' LIMIT " + total + ";";
 
@@ -1449,7 +1548,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
                 jsonObject = (JSONObject) obj;
                 java.util.Date dt2 = new java.util.Date();
                 //System.out.println("Tweet #" + i + " Time:" + dt2.toString());
-                updateTweetDB(jsonObject, RelationshipSearch.REPLIED, IdSearch,IDTweet);
+                //updateTweetDB(jsonObject, RelationshipSearch.REPLIED, IdSearch,IDTweet);
                 insertEdgeDB(Tweet, RelationshipSearch.REPLIED, IdSearch);
                 insertNodeDB(Tweet, RelationshipSearch.REPLIED, IdSearch);
                 dt2 = new java.util.Date();
@@ -1466,4 +1565,42 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
             System.out.println(e.getMessage());
         }
     }
+	
+	public ResultSet getPopularTweetBySearch(int idSearch,String orderBy, int limit){
+		int i = 0;
+		try {
+			connect();
+			String sql = "";
+			if (limit == -1)
+				sql = "SELECT id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
+						+ "truncated,hashtags,usr_id_str,location,created_at,"
+						+ "source,retweet_count,retweeted,favorite_count,"
+						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
+						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY " + orderBy + " desc, created_at ;";
+			else
+				sql = "SELECT id_str,screen_name,in_reply_to_user_id,in_reply_to_screen_name,text,lang,possibly_sensitive,"
+						+ "truncated,hashtags,usr_id_str,location,created_at,"
+						+ "source,retweet_count,retweeted,favorite_count,"
+						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
+						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY " + orderBy + " desc, created_at LIMIT " + limit + ";";
+
+			System.out.println(sql);
+			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+					java.sql.ResultSet.CONCUR_READ_ONLY);
+			// preparedStatement.setFetchSize(Integer.MIN_VALUE);
+			stmt.setFetchSize(Integer.MIN_VALUE);
+
+			// preparedStatement = connect.prepareStatement(sql);
+
+			ResultSet rs = stmt.executeQuery(sql); // reparedStatement.executeQuery();
+			System.out.println("Result set!!");
+			return rs;
+			
+		} catch (Exception ex) {
+			System.out.println("ERROR getTweets(" + i + "): " + ex.getMessage());
+			ex.printStackTrace();
+			return null;
+		}
+
+	}
 }
