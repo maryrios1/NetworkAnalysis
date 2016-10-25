@@ -51,37 +51,31 @@ $(document).ready(function() {
                     dataType: 'json', // what type of data do we expect back from the server
                     encode: true
                 })
-                        // using the done promise callback
-                        .done(function (data) {
-                            // log data to the console so we can see
-                            console.log(data);
+                    // using the done promise callback
+                    .done(function (data) {
+                        // log data to the console so we can see
+                        console.log(data);
 
-                            // here we will handle errors and validation messages
-                            if (data.status == 'ERROR') 
-                            {                                
-                            	$('input[name=keywords]').val("");
-                                $('input[name=SearchName]').val("");
-                                $('input[name=NameTable]').val("");
-                                alert(data.message);
-                            }
-                            else 
-                                alert(data.message); 
-                        })
-                        // using the fail promise callback
-                        .fail(function (data) {
-                            // show any errors
-                            // best to remove for production
+                        // here we will handle errors and validation messages
+                        if (data.status == 'ERROR') 
+                        {                                
                         	$('input[name=keywords]').val("");
                             $('input[name=SearchName]').val("");
-                            $('input[name=NameTable]').val("");                            
-                            alert("ERROR "  + data.message);
-                        })
-                        .success( function(data){
-                        	//alert('OK:' + data.message);
-                        })
-                        .beforeSend( function(data) {
-					    	//alert("La búsqueda será iniciada.");
-                        });
+                            $('input[name=NameTable]').val("");
+                            alert(data.message);
+                        }
+                        else 
+                            alert(data.message); 
+                    })
+                    // using the fail promise callback
+                    .fail(function () {
+                        // show any errors
+                        // best to remove for production
+                    	$('input[name=keywords]').val("");
+                        $('input[name=SearchName]').val("");
+                        $('input[name=NameTable]').val("");                            
+                        alert("ERROR ");
+                    });
                 break;
             case 'ExportData':
 

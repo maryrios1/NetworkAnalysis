@@ -72,6 +72,16 @@ public class TwitterRequests {
 	}
 	
 	@GET
+	@Path("/StreamTweets/{word}/{relation}/{searchName}/{iduser}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String GetStreamTweets(@PathParam("word") String word, @PathParam("relation") String relation,
+			@PathParam("searchName") String searchName, @PathParam("iduser") int IDUser) throws IOException {
+		Gson gson = new Gson();
+		Message msg = startStreamTweets(word, relation, searchName, IDUser, Status.START, 0);
+		return gson.toJson(msg);
+	}
+	
+	@GET
 	@Path("/FixTweets/{idSearch}/{delete}/{start}/{total}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public void FixTweets( @PathParam("idSearch") int IdSearch,@PathParam("delete") int delete,@PathParam("start") int start,@PathParam("total") int total
@@ -109,9 +119,8 @@ public class TwitterRequests {
 		Boolean KeepSearch = true;
 		String line = "";
 		Search search = new Search();
-		search.setIDSearch(idSearch);
-		Message msg = new Message();
-		Gson gson = new Gson();
+		//search.setIDSearch(idSearch);
+		Message msg = null;		
 		try {
 			
 			if (status == Status.START) {
@@ -122,8 +131,10 @@ public class TwitterRequests {
 			Credential credential = search.getCredential();
 			msg = search.getMessage();
 			
-			if(msg.getStatus().equals("ERROR"))
+			if(msg.getStatus().equals("ERROR")){
+				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.STOP);
 				return msg;
+			}
 				
 			// Connect to twiter API
 			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(credential.getConsumerKeyStr(),credential.getConsumerSecretStr());
@@ -136,7 +147,18 @@ public class TwitterRequests {
 			DefaultHttpClient client = new DefaultHttpClient();
 			response = client.execute(httpGet);
 			int statusCode = response.getStatusLine().getStatusCode();
-			System.out.println(statusCode + " : " + response.getStatusLine().getReasonPhrase());
+			String responseAPI = response.getStatusLine().getReasonPhrase();
+			System.out.println(statusCode + " : " + responseAPI);
+			
+			//ERROR connecting to API Twitter
+			if(statusCode!=200){
+				msg.setStatus("ERROR");
+				msg.setMessage("Error con la credencial de twitter por favor intenta de nuevo.");
+				msg.setError(responseAPI);
+				msg.setCode(statusCode);
+				msg.setObject("RESTART");
+			}
+			
 			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			String templine = "";
 			Boolean tweetsFound = false;			
@@ -204,6 +226,7 @@ public class TwitterRequests {
 			}
 
 		} catch (Exception ex) {
+			msg = new Message();
 			msg.setMessage("ERROR: " + ex.getMessage());
 			msg.setCode(502);
 			msg.setStatus("ERROR");
@@ -231,8 +254,10 @@ public class TwitterRequests {
 			Credential credential = search.getCredential();
 			msg = search.getMessage();
 			
-			if(msg.getStatus().equals("ERROR"))
+			if(msg.getStatus().equals("ERROR")){
+				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.STOP);
 				return gson.toJson(msg);
+			}
 			
 			// Connect to twiter API
 			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(credential.getConsumerKeyStr(), credential.getConsumerSecretStr());
@@ -246,8 +271,20 @@ public class TwitterRequests {
 
 			DefaultHttpClient client = new DefaultHttpClient();
 			response = client.execute(httpGet);
+			
 			int statusCode = response.getStatusLine().getStatusCode();
-			System.out.println(statusCode + " : " + response.getStatusLine().getReasonPhrase());
+			String responseAPI = response.getStatusLine().getReasonPhrase();
+			System.out.println(statusCode + " : " + responseAPI);
+			
+			//ERROR connecting to API Twitter
+			if(statusCode!=200){
+				msg.setStatus("ERROR");
+				msg.setMessage("Error con la credencial de twitter por favor intenta de nuevo.");
+				msg.setError(responseAPI);
+				msg.setCode(statusCode);
+				msg.setObject("RESTART");
+			}
+			
 			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			String templine = "";
 			Boolean tweetsFound = false;			
@@ -322,27 +359,17 @@ public class TwitterRequests {
 		}
 	}
 
-	@GET
-	@Path("/StreamTweets/{word}/{relation}/{searchName}/{iduser}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String GetStreamTweets(@PathParam("word") String word, @PathParam("relation") String relation,
-			@PathParam("searchName") String searchName, @PathParam("iduser") int IDUser) throws IOException {
-		Gson gson = new Gson();
-		Message msg = startStreamTweets(word, relation, searchName, IDUser, Status.START, 0);
-		return gson.toJson(msg);
-	}
-
 	public Message startStreamTweets(String word, String relation, String searchName, int idUSer, Status status,
 			int idSearch) {
 		String line = "";
-		Search search = new Search();
-		search.setIDSearch(idSearch);
+		Search search ;//= new Search();
+		/*search.setIDSearch(idSearch);
 		search.setSearchwords(word);
 		search.setIduser(idUSer);
-		search.setSearchname(searchName);
-		Message msg = new Message();
+		search.setSearchname(searchName);*/
+		Message msg = null;// = new Message();
 		Boolean KeepSearch = true;
-		Gson gson = new Gson();
+		//Gson gson = new Gson();
 		Boolean tweetsFound = false;
 		
 		try {
@@ -376,12 +403,13 @@ public class TwitterRequests {
 			String responseMessage = response.getStatusLine().getReasonPhrase();
 			System.out.println(statusCode + " : " + responseMessage);
 
-			if(responseMessage.contains("Authorization Required") ||responseMessage.contains("Enhance Your Calm")){
+			if(statusCode!=200){
 				// Stop the logical search in the database
 				search = updateRecordDB(idSearch, SearchType.STREAM, Status.STOP);
 				msg.setCode(statusCode);
-				msg.setMessage("ERROR Credencial: " + responseMessage);
+				msg.setMessage("Error en la credencial por favor intente de nuevo.");
 				msg.setObject(status.RESTART.toString());
+				msg.setError(responseMessage);
 				msg.setStatus("ERROR");
 				return msg;
 			}
@@ -447,6 +475,7 @@ public class TwitterRequests {
 			}
 
 		} catch (Exception ex) {
+			msg = new Message();
 			msg.setMessage(ex.getMessage());
 			msg.setCode(502);
 			msg.setStatus("ERROR");
