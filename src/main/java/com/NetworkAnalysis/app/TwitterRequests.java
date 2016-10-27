@@ -52,7 +52,7 @@ public class TwitterRequests {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String GetSearchTweets(@PathParam("words") String words, @PathParam("relation") String relation,
 			@PathParam("searchName") String searchName, @PathParam("iduser") int IDUser
-	) throws IOException {
+	) {
 		Gson gson = new Gson();
 		Message msg = startSearchTweets(words, relation, searchName, IDUser, Status.START, 0);
 		return gson.toJson(msg);
@@ -226,6 +226,7 @@ public class TwitterRequests {
 			}
 
 		} catch (Exception ex) {
+			System.out.println("ERROR: " + ex.getMessage());
 			msg = new Message();
 			msg.setMessage("ERROR: " + ex.getMessage());
 			msg.setCode(502);
@@ -371,6 +372,7 @@ public class TwitterRequests {
 		Boolean KeepSearch = true;
 		//Gson gson = new Gson();
 		Boolean tweetsFound = false;
+		System.out.println("Entrando a la busqueda por stream con status: " + status);
 		
 		try {
 			// Insert or update the search
@@ -379,12 +381,18 @@ public class TwitterRequests {
 			} else
 				search = updateRecordDB(idSearch, SearchType.STREAM, Status.RESTART);
 			
+			System.out.println("Search: " + search.toString());
+			
 			Credential credential = search.getCredential();
 			msg = search.getMessage();
+			System.out.println("Message: " + msg.toString());
 			
 			if(msg.getStatus().equals("ERROR"))
 			{
-				updateRecordDB(idSearch, SearchType.STREAM, Status.STOP);
+				System.out.println("Error creando busqueda en la bd.");
+				idSearch = search.getIDSearch();
+				if (idSearch >0)
+					updateRecordDB(idSearch, SearchType.STREAM, Status.STOP);
 				return msg;
 			}
 			
@@ -405,6 +413,7 @@ public class TwitterRequests {
 
 			if(statusCode!=200){
 				// Stop the logical search in the database
+				System.out.println("Hubo un error al ejecutar la búsqueda.");
 				search = updateRecordDB(idSearch, SearchType.STREAM, Status.STOP);
 				msg.setCode(statusCode);
 				msg.setMessage("Error en la credencial por favor intente de nuevo.");
@@ -479,6 +488,7 @@ public class TwitterRequests {
 			msg.setMessage(ex.getMessage());
 			msg.setCode(502);
 			msg.setStatus("ERROR");
+			System.out.println("ERROR TwitterRequests catch:" + ex.getMessage());
 			return msg;
 		} finally {
 			return msg;

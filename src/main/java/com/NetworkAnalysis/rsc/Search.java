@@ -148,4 +148,11 @@ public class Search {
 		this.credential = credential;
 	}
 
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return "IDSearch:" + this.IDSearch +  ",SearchName: " + this.searchname + ",Message:" + this.message.toString();
+	}
+
+	
 }

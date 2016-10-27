@@ -76,4 +76,12 @@ public class Message {
 		// TODO Auto-generated constructor stub
 	}
 
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return "{Message:" + this.message + ",Status:" + this.status.toString() + ",Error:" + this.error + "}";
+	}
+	
+	
+
 }

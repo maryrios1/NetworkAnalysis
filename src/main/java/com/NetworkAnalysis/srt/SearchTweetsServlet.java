@@ -99,25 +99,22 @@ public class SearchTweetsServlet extends HttpServlet implements GlobalVariablesI
         System.out.println("SearchName: " + SEARCH_NAME);
         System.out.println("SearchType: " + SEARCH_TYPE);              
         
-        ClientConfig config = new DefaultClientConfig();
-		Client client = Client.create(config);
-		
-		WebResource service = client.resource(REST_URI);
-		String asd = REST_URI + "rest" + SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1";
-		WebResource addService;
-		try{
+        try{
+	        ClientConfig config = new DefaultClientConfig();
+			Client client = Client.create(config);
+			
+			WebResource service = client.resource(REST_URI);
+			String asd = REST_URI + "rest" + SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1";
+			WebResource addService;		
+			
 			if (SEARCH_TYPE.equals("Search"))
 				addService = service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1");
-				//response.getWriter().print((service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1"))
-					//.accept(MediaType.TEXT_PLAIN).get(String.class));
 			else
-				addService = service.path("rest").path(STREAM_TWEETS + keywords + "/REPLIED/" + SEARCH_NAME+ "/1");
-				//response.getWriter().print((service.path("rest").path(STREAM_TWEETS + keywords + "/REPLIED/" + SEARCH_NAME+ "/1"))
-					//	.accept(MediaType.TEXT_PLAIN).get(String.class));		
+				addService = service.path("rest").path(STREAM_TWEETS + keywords + "/REPLIED/" + SEARCH_NAME+ "/1");		
 			
-			System.out.println("GetTweets Response: " + getResponse(addService));		
+			System.out.println("GetTweets Response: " + getResponse(addService));
 			
-			response.getWriter().print(getOutputAsJSON(addService));
+			//response.getWriter().print(getOutputAsJSON(addService));
 		}
 		catch(Exception ex){
 			System.out.println("ERROR" + ex.getMessage());
