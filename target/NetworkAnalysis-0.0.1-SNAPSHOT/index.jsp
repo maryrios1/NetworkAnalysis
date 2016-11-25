@@ -1,6 +1,5 @@
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-	pageEncoding="ISO-8859-1"%>
-
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page import="javax.servlet.http.HttpSession;"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <!--
 	Photon by HTML5 UP
@@ -38,18 +37,23 @@
 <script type="text/javascript" src="js/twitter-login.js"></script>
 </head>
 <body>
-
+<%
+    HttpSession misession= request.getSession();
+    
+    if (misession.getAttribute("user")==null)
+        response.sendRedirect("Login.jsp");
+%>
 	<!-- Header -->
 	<section id="header">
 	<div class="inner">
 		<span class="icon major fa-twitter"></span>
 		<h1>
-			Análisis de redes sociales <br />
+			AnÃ¡lisis de redes sociales <br />
 		</h1>
-		<p>Mary Ríos</p>
+		<p>Mary RÃ­os :):D</p>
 		<br /> <br /> <br /> <br /> <br />
 		<ul class="actions">
-			<li><a href="#one" class="button scrolly">Búsquedas</a></li>
+			<li><a href="#one" class="button scrolly">BÃºsquedas</a></li>
 			<li><a href="#two" class="button scrolly">Historial</a></li>
 		</ul>
 	</div>
@@ -60,20 +64,14 @@
 	<div class="container">
 		<div class="row 150%">
 			<div class="6u 12u$(medium)">
-				<form action="${pageContext.request.contextPath}/SearchTweetsServlet"
-					method="POST">
+				<form action="${pageContext.request.contextPath}/SearchTweetsServlet" method="POST">					
 					<header class="major">
-					<h2>¿Que deseas buscar hoy?</h2>
+					<h2>Â¿Que deseas buscar hoy?</h2>
 					</header>
-					Nombre de la búsqueda
-					<input type="text" name="SearchName">
-					<!-- 
-					<p>
-						Escribe las palabras clave separadas por espacio.<br>
-						Ejemplo: "Facebook" "fb" "face"
-					</p> -->
+					Nombre de la bÃºsqueda
+					<input type="text" name="SearchName" placeholder="EleccionesUSA2016" required>									
 					</br>
-					Tipo de búsqueda
+					Tipo de bÃºsqueda
 					<div class="12u$">
 						<div class="select-wrapper">
 							<select name="SearchType" id="SearchType">
@@ -83,14 +81,16 @@
 						</div>
 					</div>
 					</br>
-					Palabra clave <br> <input type="text" name="keywords">
-					<br id="raro"> <br> <input type="submit"
-						value="Start Search" id="StartSearch">
-					<!-- 
-					<input type="submit" value="Export Data" id="ExportData"> 
-					<input type="submit" value="Show Graph" id="ShowGraph"> 
-					<input type="submit" value="Classify Tweets" id="ClassifyTweets">
-					 -->
+					Palabra clave
+					<br>
+					 
+					<input type="text" name="keywords" placeholder="Ejemplo: Facebook fb face Ã³ Hillary,Trump" required>
+					<h6>
+						Escribe las palabras clave separadas por espacio (AND) o coma (OR).<br>						
+					</h6>
+					<br id="raro"> 
+					 
+					<input type="submit" value="Iniciar BÃºsqueda" id="StartSearch">
 				</form>
 
 
@@ -106,43 +106,47 @@
 	<section id="two" class="main style2">
 	<div class="container">
 	<input type="button" value="Mostrar Historial" id="showTable" />
+
 		<div id="tablediv" class="table-wrapper">
 		</br>
-			<div class="row 200%"  style="horizontal-align:block;" >
-				<div class="6u 12u$(xsmall)"  >
-					<input type="checkbox" id="cTwets" name="cTwets" checked>
-					<label for="cTwets" style="color:white">Tweets</label>
-				</div>
-				<div class="6u$ 12u$(xsmall)" style="color:white">
+				<div class="row">
+				<div class="6u 12u$(medium)"  >
+					<input type="checkbox" id="cTweets" name="cTweets">
+					<label for="cTweets" style="color:white">Tweets</label>
+					
 					<input type="checkbox" id="cNormalNodes" name="cNormalNodes" checked>
-					<label for="cNormalNodes" style="color:white">Normal Nodes</label>
-				</div>
-				<div class="6u$ 12u$(xsmall)">
-					<input type="checkbox" id="cNormalRelations" name="cNormalRelations" >
-					<label for="cNormalRelations" style="color:white">Normal Relations</label>
-				</div>
-				<div class="6u$ 12u$(xsmall)">
+					<label for="cNormalNodes" style="color:white">Relaciones por Retweet/Mencionado/Contestado</label>
+					
 					<input type="checkbox" id="cHashtagNodes" name="cHashtagNodes" >
-					<label for="cHashtagNodes" style="color:white">Hashtag Nodes</label>
+					<label for="cHashtagNodes" style="color:white">Relaciones por Hashtag</label>
 				</div>
-				<div class="6u$ 12u$(xsmall)">
-					<input type="checkbox" id="cHashtagRelations" name="cHashtagNodes" >
-					<label for="cHashtagNodes" style="color:white">Hashtag Nodes</label>
+				<div class="6u 12u$(medium)" style="color:white">
+
+					<input type="checkbox" id="cFavorito" name="cFavorito" onclick="showSelectNumber()" >
+					<label for="cFavorito" style="color:white">+ Favorito</label>
+					
+					<input type="checkbox" id="cRetweeted" name="cRetweeted" onclick="showSelectNumber()" >
+					<label for="cRetweeted" style="color:white">+ Retweeted</label>
+					<div id="selectNumber">
+						LÃ­mite de tweets
+						<input type="text" id="txtNumber" name="txtNumber" style="background: white;color:black" required >
+					</div>
 				</div>
 			</div>
+			
 			<table cellspacing="0" id="searchtable" >
-				    
+				Â Â Â Â 
 				<thead >
-					<tr >
-						        
-						<th scope="col" style="color:white">Search Name</th> 
-						<th scope="col" style="color:white">Words</th> 					                
-						<th scope="col" style="color:white">Start Search</th>         
-						<th scope="col" style="color:white">End Search</th>         
-						<th scope="col" style="color:white">Last Update</th>         
-						<th scope="col" style="color:white">Type</th>              
-						<th scope="col" style="color:white">Keep Searching</th>  
-						<th scope="col" style="color:white">Export</th>  
+					<tr >					Â Â Â Â Â Â Â Â 
+						<th scope="col" style="color:white">Nombre</th> 
+						<th scope="col" style="color:white">Palabras</th> 					Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â 
+						<th scope="col" style="color:white">Inicio</th> Â Â Â Â Â Â Â Â 
+						<th scope="col" style="color:white">Final</th> Â Â Â Â Â Â Â Â 
+						<!-- <th scope="col" style="color:white">Ãšltima ActualizaciÃ³n</th>  -->
+						<th scope="col" style="color:white">#Tweets</th>Â Â Â Â Â Â Â Â 
+						<th scope="col" style="color:white">Tipo</th>Â Â Â Â Â Â Â Â Â  Â Â Â Â 
+						<th scope="col" style="color:white">Buscando</th>Â Â 
+						<th scope="col" style="color:white">Exportar</th>Â Â 
 					</tr>
 				</thead>
 			</table>
@@ -166,7 +170,7 @@
 				<form action="${pageContext.request.contextPath}/GetTheWords"
 					method="POST">
 					<header class="major">
-					<h2>¿Que deseas buscar hoy?</h2>
+					<h2>Â¿Que deseas buscar hoy?</h2>
 					</header>
 
 					<p>Selecciona la busqueda en el historial</p>
@@ -557,20 +561,21 @@ print 'It took ' + i + ' iterations to sort the deck.';</code></pre>
 	<!-- Footer -->
 	<section id="footer">
 	<ul class="icons">
-		<li><a href="#" class="icon alt fa-twitter"><span
+		<!--  <li><a href="#" class="icon alt fa-twitter"><span
 				class="label">Twitter</span></a></li>
 		<li><a href="#" class="icon alt fa-facebook"><span
 				class="label">Facebook</span></a></li>
 		<li><a href="#" class="icon alt fa-instagram"><span
-				class="label">Instagram</span></a></li>
-		<li><a href="#" class="icon alt fa-github"><span
+				class="label">Instagram</span></a></li>-->
+		<li><a href="https://github.com/xmaryposax/NetworkAnalysis" class="icon alt fa-github"><span
 				class="label">GitHub</span></a></li>
+		<!-- 
 		<li><a href="#" class="icon alt fa-envelope"><span
-				class="label">Email</span></a></li>
+				class="label">Email</span></a></li> -->
 	</ul>
 	<ul class="copyright">
-		<li>&copy; Untitled</li>
-		<li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+		<li>&copy; ITESO</li>
+		<!-- <li>Design: <a href="http://html5up.net">HTML5 UP</a></li> -->
 	</ul>
 	</section>
 </body>

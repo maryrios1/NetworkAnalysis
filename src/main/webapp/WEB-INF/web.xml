@@ -25,6 +25,15 @@
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 
+        <servlet>
+            <servlet-name>LoginServlet</servlet-name>
+            <servlet-clas>com.NetworkAnalysis.srt</servlet-class>
+          </servlet>
+        <servlet-mapping>
+            <servlet-name>LoginServlet</servlet-name>
+            <url-pattern>/LoginServlet/</url-pattern>
+          </servlet-mapping
+
 	<servlet-mapping>
 		<servlet-name>NetworkAnalysis</servlet-name>
 		<url-pattern>/rest/*</url-pattern>

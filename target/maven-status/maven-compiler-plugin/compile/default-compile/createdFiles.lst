@@ -1,3 +1,4 @@
+com\NetworkAnalysis\rsc\ConnectionUtil.class
 com\NetworkAnalysis\app\SearchManagement$3.class
 com\NetworkAnalysis\rsc\Node.class
 com\NetworkAnalysis\srt\SearchTweetsServlet.class
@@ -12,6 +13,7 @@ com\NetworkAnalysis\app\SearchManagement.class
 com\NetworkAnalysis\rsc\RelationshipSearch$2.class
 com\NetworkAnalysis\rsc\RelationshipSearch$5.class
 com\NetworkAnalysis\rsc\RelationshipSearch.class
+com\NetworkAnalysis\rsc\Credential.class
 com\NetworkAnalysis\rsc\User.class
 com\NetworkAnalysis\rsc\SearchType$1.class
 com\NetworkAnalysis\rsc\SearchType.class
@@ -22,7 +24,6 @@ com\NetworkAnalysis\rsc\GlobalVariablesInterface.class
 com\NetworkAnalysis\rsc\ConnectionRDBMS.class
 com\NetworkAnalysis\rsc\Search.class
 com\NetworkAnalysis\app\SearchManagement$2.class
-com\NetworkAnalysis\rsc\ConnectionRDBMS$1.class
 com\NetworkAnalysis\app\UserManagement.class
 com\NetworkAnalysis\rsc\RelationshipSearch$4.class
 com\NetworkAnalysis\app\SearchManagement$1.class

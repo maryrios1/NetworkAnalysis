@@ -1105,7 +1105,6 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			
 			  while (rs.next()) { 
 				  Tweet tweet = new Tweet();
-				  tweet.setId(rs.getLong("id"));
 				  tweet.setId_str(rs.getString("id_str"));
 				  tweet.setScreen_name(rs.getString("screen_name"));
 				  tweet.setIn_reply_to_user_id(rs.getLong("in_reply_to_user_id"));
