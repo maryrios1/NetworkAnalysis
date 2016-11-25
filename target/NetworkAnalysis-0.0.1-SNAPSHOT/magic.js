@@ -1,6 +1,9 @@
 // magic.js
 $(document).ready(function() {
     var form_config = {button: null};
+    //$("#selectPopular").hide();
+    $("#selectNumber").hide();
+    
 /*
  * <input type="submit" value="StartSearch" id="StartSearch">                                                            
 <input type="submit" value="ExportData" id="ExportData">
@@ -48,37 +51,31 @@ $(document).ready(function() {
                     dataType: 'json', // what type of data do we expect back from the server
                     encode: true
                 })
-                        // using the done promise callback
-                        .done(function (data) {
-                            // log data to the console so we can see
-                            console.log(data);
+                    // using the done promise callback
+                    .done(function (data) {
+                        // log data to the console so we can see
+                        console.log(data);
 
-                            // here we will handle errors and validation messages
-                            if (!data.success)
-                            {
-                                if (data.errors.keywords) {
-                                    $('#raro').addClass('has-error'); // add the error class to show red input
-                                    $('#raro').append('<div class="help-block">' + data.errors.name + '</div>'); // add the actual error message under our input
-                                }
-                            }
-                            else {
-
-                                // ALL GOOD! just show the success message!
-                                $('form').append('<div>' + data.message + '</div>');
-
-                                // usually after form submission, you'll want to redirect
-                                // window.location = '/thank-you'; // redirect a user to another page
-                                alert('success'); // for now we'll just alert the user
-
-                            }
-                        })
-                        // using the fail promise callback
-                        .fail(function (data) {
-
-                            // show any errors
-                            // best to remove for production
-                            console.log(data);
-                        });
+                        // here we will handle errors and validation messages
+                        if (data.status == 'ERROR') 
+                        {                                
+                            $('input[name=keywords]').val("");
+                            $('input[name=SearchName]').val("");
+                            $('input[name=NameTable]').val("");
+                            alert(data.message);
+                        }
+                        else 
+                            alert(data.message); 
+                    })
+                    // using the fail promise callback
+                    .fail(function () {
+                        // show any errors
+                        // best to remove for production
+                    	$('input[name=keywords]').val("");
+                        $('input[name=SearchName]').val("");
+                        $('input[name=NameTable]').val("");                            
+                        alert("ERROR ");
+                    });
                 break;
             case 'ExportData':
 
@@ -220,6 +217,7 @@ $(document).ready(function() {
      	$("#showTable").click(function(event){
      		$.get('GetUserSearchesServlet',function(responseJson) {
  				if(responseJson!=null){
+ 					
 					$("#searchtable").find("tr:gt(0)").remove();
 					var table1 = $("#searchtable");
 					$.each(responseJson, function(key,value) { 
@@ -251,7 +249,8 @@ $(document).ready(function() {
 						rowNew.children().eq(1).text(value['searchwords']); 						
 						rowNew.children().eq(2).text(value['startsearch']); 
 						rowNew.children().eq(3).text(value['endsearch']); 
-						rowNew.children().eq(4).text(value['lastupdate']); 
+						//rowNew.children().eq(4).text(value['lastupdate']); 
+						rowNew.children().eq(4).text(value['tweetsNumber']);
 						//rowNew.children().eq(5).find("option[value='"+ value['type'] +"']" ).attr('selected','selected');
 						//rowNew.children().eq(5).find("#SearchType_" + value['IDSearch'] + " option[value='"+ value['type'] +"']").attr('selected', 'selected'); 
 						//rowNew.children().eq(6).text(value['keepsearching']);						
@@ -278,6 +277,66 @@ function idIndex(a,id) {
         if (a[i].id == id) return i;}
     return null;
 }
+function stopRestartSearch2(btn,id){
+	var btnId = btn.id;
+	var formData;
+	var url;
+	if(btn.value == 'RESTART'){
+		url = '/NetworkAnalysis/rest/Search/RestartRequest';
+		formData = {
+	            "typeAction"    : "RESTART",
+	            "type"          : $('#SearchType_' + id + ' option:selected').val(),
+	            "relation"      : "REPLIED",
+	            "idSearch"		: id
+	        };
+		
+		$.ajax({
+            url: url,
+            data: JSON.stringify(formData),
+            dataType: "json",
+            type: "POST",
+            contentType: "application/json",
+            beforeSend: function(data){
+            	btn.value  = 'STOP';
+            },
+            success: function(data) {
+                alert ("success" + data.message);
+                btn.value  = 'STOP';
+            },
+            error: function(data) {
+                alert("error" +  data.message);
+                btn.value  = 'RESTART';
+            }
+        });
+	}
+	else
+	{
+		url = '/NetworkAnalysis/rest/Search/StopRequest';
+		formData = {
+	            "typeAction"    : "STOP",
+	            "idSearch"		: id
+        };
+		 
+		$.ajax({
+            url: url,
+            data: JSON.stringify(formData),
+            dataType: "json",
+            contentType: "application/json",
+            type: "POST",
+            beforeSend: function(data){
+            	btn.value  = 'RESTART';
+            },
+            success: function(data) {
+                alert ("success" + data.message);
+                btn.value  = 'RESTART';
+            },
+            error: function(data) {
+                alert("error" +  data.message);
+                btn.value  = 'STOP';
+            }
+        });
+	}
+}
 
 function stopRestartSearch(btn,id){
 	var btnId = btn.id;
@@ -296,7 +355,7 @@ function stopRestartSearch(btn,id){
 		formData = {
 	            'typeAction'    : 'STOP',
 	            'idSearch'		: id
-	        };
+        };
 	}
 
 	$.ajax({
@@ -305,22 +364,23 @@ function stopRestartSearch(btn,id){
         data: formData, // our data object
         dataType: 'json', // what type of data do we expect back from the server
         encode: true,
-        beforeSend: function(){
+        beforeSend: function(data){
         	if(btn.value=="RESTART"){
-        		btn.value  = 'STOP'
+        		btn.value  = 'STOP';
         	}
         	else{
-        		btn.value  = 'RESTART'
+        		btn.value  = 'RESTART';
         	}
         	
         },
-        complete: function(){
-        	if(btn.value=="STOP"){
+        complete: function(data){
+        	/*if(btn.value=="STOP"){
         		btn.value  = 'RESTART'
         	}
         	else{
         		btn.value  = 'STOP'
-        	}
+        	}*/
+        	//btn.value = data.object;
         }
     })
             // using the done promise callback
@@ -328,23 +388,14 @@ function stopRestartSearch(btn,id){
                 // log data to the console so we can see
                 console.log(data);
                 // here we will handle errors and validation messages
-                if (!data.success)
+                if (data.status=='ERROR')
                 {
-                    if (data.errors.keywords) {
-                        $('#raro').addClass('has-error'); // add the error class to show red input
-                        $('#raro').append('<div class="help-block">' + data.errors.name + '</div>'); // add the actual error message under our input
-                    }
+                    alert(data.message);
                 }
                 else {
-
-                    // ALL GOOD! just show the success message!
-                    $('form').append('<div>' + data.message + '</div>');
-
-                    // usually after form submission, you'll want to redirect
-                    // window.location = '/thank-you'; // redirect a user to another page
-                    alert('success'); // for now we'll just alert the user
-
+                	alert(data.message);
                 }
+                btn.value = data.object;
             })
             // using the fail promise callback
             .fail(function (data) {
@@ -352,11 +403,37 @@ function stopRestartSearch(btn,id){
                 // show any errors
                 // best to remove for production
                 console.log(data);
+                alert('¡Ha ocurrido un error! ' + data.message);
+                btn.value = data.object;
             });
 }
 
 function exportToExcel(btn,id){
 	var btnId = btn.id;
-	//alert('The id of the buttonExcel is ' + btnId + ',  id: ' + id)
-	location.href = "ExportToExcel?SearchId=" + id;
+	var favorite = $('#cFavorito').is(":checked");
+	var retweeted = $('#cRetweeted').is(":checked");
+	var limit = $('#txtNumber').val();
+
+	location.href = "ExportToExcel?SearchId=" + id+"&NormalNodes=" + $('#cNormalNodes').is(":checked") + 
+	"&HashtagNodes=" + $('#cHashtagNodes').is(":checked") + "&Tweets=" +$('#cTweets').is(":checked") + 
+	"&Favorite=" + favorite + "&Retweeted=" + retweeted + "&Limit=" + limit;
+	/*
+	var formData = {
+            'NormalNodes'   : $('#cNormalNodes').is(":checked"),
+            'HashtagNodes'  : $('#cHashtagNodes').is(":checked"),
+            'Tweets'      	: $('#cTweets').is(":checked"),
+            'SearchId'		: id
+        };
+   	*/
+}
+
+function showSelectNumber(){
+	var ischeckedF = $('#cFavorito').is(":checked");
+	var ischeckedR = $('#cRetweeted').is(":checked");
+	
+	if(ischeckedF == true || ischeckedR == true)	
+		$('#selectNumber').show();
+	else
+		$('#selectNumber').hide();
+	
 }

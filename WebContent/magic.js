@@ -59,7 +59,7 @@ $(document).ready(function() {
                         // here we will handle errors and validation messages
                         if (data.status == 'ERROR') 
                         {                                
-                        	$('input[name=keywords]').val("");
+                            $('input[name=keywords]').val("");
                             $('input[name=SearchName]').val("");
                             $('input[name=NameTable]').val("");
                             alert(data.message);

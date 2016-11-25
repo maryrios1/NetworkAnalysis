@@ -1,6 +1,5 @@
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-	pageEncoding="ISO-8859-1"%>
-
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page import="javax.servlet.http.HttpSession;"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <!--
 	Photon by HTML5 UP
@@ -38,18 +37,23 @@
 <script type="text/javascript" src="js/twitter-login.js"></script>
 </head>
 <body>
-
+<%
+    HttpSession misession= request.getSession();
+    
+    if (misession.getAttribute("user")==null)
+        response.sendRedirect("Login.jsp");
+%>
 	<!-- Header -->
 	<section id="header">
 	<div class="inner">
 		<span class="icon major fa-twitter"></span>
 		<h1>
-			Análisis de redes sociales <br />
+			AnÃ¡lisis de redes sociales <br />
 		</h1>
-		<p>Mary Ríos</p>
+		<p>Mary RÃ­os :):D</p>
 		<br /> <br /> <br /> <br /> <br />
 		<ul class="actions">
-			<li><a href="#one" class="button scrolly">Búsquedas</a></li>
+			<li><a href="#one" class="button scrolly">BÃºsquedas</a></li>
 			<li><a href="#two" class="button scrolly">Historial</a></li>
 		</ul>
 	</div>
@@ -60,15 +64,14 @@
 	<div class="container">
 		<div class="row 150%">
 			<div class="6u 12u$(medium)">
-				<form action="${pageContext.request.contextPath}/SearchTweetsServlet"
-					method="POST">
+				<form action="${pageContext.request.contextPath}/SearchTweetsServlet" method="POST">					
 					<header class="major">
-					<h2>¿Que deseas buscar hoy?</h2>
+					<h2>Â¿Que deseas buscar hoy?</h2>
 					</header>
-					Nombre de la búsqueda
+					Nombre de la bÃºsqueda
 					<input type="text" name="SearchName" placeholder="EleccionesUSA2016" required>									
 					</br>
-					Tipo de búsqueda
+					Tipo de bÃºsqueda
 					<div class="12u$">
 						<div class="select-wrapper">
 							<select name="SearchType" id="SearchType">
@@ -81,13 +84,13 @@
 					Palabra clave
 					<br>
 					 
-					<input type="text" name="keywords" placeholder="Ejemplo: Facebook fb face ó Hillary,Trump" required>
+					<input type="text" name="keywords" placeholder="Ejemplo: Facebook fb face Ã³ Hillary,Trump" required>
 					<h6>
 						Escribe las palabras clave separadas por espacio (AND) o coma (OR).<br>						
 					</h6>
 					<br id="raro"> 
 					 
-					<input type="submit" value="Iniciar Búsqueda" id="StartSearch">
+					<input type="submit" value="Iniciar BÃºsqueda" id="StartSearch">
 				</form>
 
 
@@ -125,25 +128,25 @@
 					<input type="checkbox" id="cRetweeted" name="cRetweeted" onclick="showSelectNumber()" >
 					<label for="cRetweeted" style="color:white">+ Retweeted</label>
 					<div id="selectNumber">
-						Límite de tweets
+						LÃ­mite de tweets
 						<input type="text" id="txtNumber" name="txtNumber" style="background: white;color:black" required >
 					</div>
 				</div>
 			</div>
 			
 			<table cellspacing="0" id="searchtable" >
-				    
+				Â Â Â Â 
 				<thead >
-					<tr >					        
+					<tr >					Â Â Â Â Â Â Â Â 
 						<th scope="col" style="color:white">Nombre</th> 
-						<th scope="col" style="color:white">Palabras</th> 					                
-						<th scope="col" style="color:white">Inicio</th>         
-						<th scope="col" style="color:white">Final</th>         
-						<!-- <th scope="col" style="color:white">Última Actualización</th>  -->
-						<th scope="col" style="color:white">#Tweets</th>        
-						<th scope="col" style="color:white">Tipo</th>              
-						<th scope="col" style="color:white">Buscando</th>  
-						<th scope="col" style="color:white">Exportar</th>  
+						<th scope="col" style="color:white">Palabras</th> 					Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â 
+						<th scope="col" style="color:white">Inicio</th> Â Â Â Â Â Â Â Â 
+						<th scope="col" style="color:white">Final</th> Â Â Â Â Â Â Â Â 
+						<!-- <th scope="col" style="color:white">Ãšltima ActualizaciÃ³n</th>  -->
+						<th scope="col" style="color:white">#Tweets</th>Â Â Â Â Â Â Â Â 
+						<th scope="col" style="color:white">Tipo</th>Â Â Â Â Â Â Â Â Â  Â Â Â Â 
+						<th scope="col" style="color:white">Buscando</th>Â Â 
+						<th scope="col" style="color:white">Exportar</th>Â Â 
 					</tr>
 				</thead>
 			</table>
@@ -167,7 +170,7 @@
 				<form action="${pageContext.request.contextPath}/GetTheWords"
 					method="POST">
 					<header class="major">
-					<h2>¿Que deseas buscar hoy?</h2>
+					<h2>Â¿Que deseas buscar hoy?</h2>
 					</header>
 
 					<p>Selecciona la busqueda en el historial</p>
