@@ -30,13 +30,14 @@
     <servlet-name>ExportToExcel</servlet-name>
     <url-pattern>/ExportToExcel</url-pattern>
   </servlet-mapping>
-   <!-- 
-   <servlet>
-    <servlet-name>RestartStopSearchServlet</servlet-name>
-    <servlet-class>com.NetworkAnalysis.srt.RestartStopSearchServlet</servlet-class>
+  
+  <!--  <servlet>
+    <servlet-name>LogOutServlet</servlet-name>
+    <servlet-class>com.NetworkAnalysis.srt.LogOutServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>RestartStopSearchServlet</servlet-name>
-    <url-pattern>/RestartStopSearchServlet</url-pattern>
-  </servlet-mapping> -->
+    <servlet-name>LogOutServlet</servlet-name>
+    <url-pattern>/LogOutServlet</url-pattern>
+  </servlet-mapping>
+  -->
 </web-app>

@@ -11,10 +11,11 @@ public class User {
 	int IDAccess;
 	String Email;
 	Boolean Enable;
-	String Message;
+	Message Message;
 	
 	public User(){
 		this.Enable = false;
+		this.Message = new Message();
 	}
 
 	public User(int iDUser, String userName, String name, String lastname, Date lastLogin, int iDAccess,
@@ -27,6 +28,7 @@ public class User {
 		LastLogin = lastLogin;
 		IDAccess = iDAccess;
 		this.Enable = enable;
+		this.Message = new Message();
 	}
 
 	public int getIDUser() {
@@ -93,11 +95,11 @@ public class User {
 		this.Email = email;
 	}
 	
-	public String getMessage() {
+	public Message getMessage() {
 		return Message;
 	}
 	
-	public void setMessage(String message) {
+	public void setMessage(Message message) {
 		Message = message;
 	}
 	

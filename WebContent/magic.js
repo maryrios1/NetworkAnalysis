@@ -437,3 +437,33 @@ function showSelectNumber(){
 		$('#selectNumber').hide();
 	
 }
+
+
+function closeSession(id){	
+	//alert('The id of the button is ' + btnId + ',  id: ' + id + ', value: ' + btn.value)	
+	var formData = {
+            'id'    : id
+    };
+	
+	$.ajax({
+        type: 'POST', // define the type of HTTP verb we want to use (POST for our form)
+        url: 'LogOutServlet', // the url where we want to POST
+        data: formData, // our data object
+        dataType: 'json', // what type of data do we expect back from the server
+        encode: true,
+        beforeSend: function(){        	
+        	
+        },
+        complete: function(){
+        	
+        }
+    })
+            // using the done promise callback
+            .done(function () {
+
+            })
+            // using the fail promise callback
+            .fail(function () {
+                alert('¡Ha ocurrido un error! ');
+            });
+}

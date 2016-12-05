@@ -126,7 +126,7 @@ public class TwitterRequests {
 			if (status == Status.START) {
 				search = insertRecordDB(searchName, IDUSer, SearchType.SEARCH, words);
 			} else
-				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.RESTART);
+				search = updateRecordDB(idSearch, SearchType.SEARCH, Status.RESTART);
 			
 			Credential credential = search.getCredential();
 			msg = search.getMessage();
@@ -140,7 +140,7 @@ public class TwitterRequests {
 			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(credential.getConsumerKeyStr(),credential.getConsumerSecretStr());
 			oAuthConsumer.setTokenWithSecret(credential.getAccessTokenStr(),credential.getAccessTokenSecretStr());
 
-			httpGet = new HttpGet("https://api.twitter.com/1.1/search/tweets.json?q=" + words + "&count=500");
+			httpGet = new HttpGet("https://api.twitter.com/1.1/search/tweets.json?q=" + words + "&count=500&result_type=recent");
 
 			oAuthConsumer.sign(httpGet);
 

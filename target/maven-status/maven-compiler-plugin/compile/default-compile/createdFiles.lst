@@ -23,6 +23,7 @@ com\NetworkAnalysis\rsc\Message.class
 com\NetworkAnalysis\rsc\GlobalVariablesInterface.class
 com\NetworkAnalysis\rsc\ConnectionRDBMS.class
 com\NetworkAnalysis\rsc\Search.class
+com\NetworkAnalysis\srt\LogOutServlet.class
 com\NetworkAnalysis\app\SearchManagement$2.class
 com\NetworkAnalysis\app\UserManagement.class
 com\NetworkAnalysis\rsc\RelationshipSearch$4.class
@@ -32,3 +33,4 @@ com\NetworkAnalysis\srt\ExportToExcelServlet.class
 com\NetworkAnalysis\rsc\Status.class
 com\NetworkAnalysis\rsc\Tweet.class
 com\NetworkAnalysis\rsc\RelationshipSearch$1.class
+com\NetworkAnalysis\srt\LoginServlet.class

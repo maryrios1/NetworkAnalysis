@@ -620,19 +620,24 @@ public class ExportToExcelServlet extends HttpServlet implements GlobalVariables
 				node.setId(rs.getString("id"));
 				node.setLabel(rs.getString("label"));
 				node.setCount(rs.getInt("count"));
-				node.setUrl(rs.getString("url"));	
-				
-				String dateString = rs.getTimestamp("timeinterval").toString();
-				DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				java.util.Date date = dateFormat.parse(dateString);
-				node.setTimeinterval(date);
-				
+				node.setUrl(rs.getString("url"));
 				rowNodes = sheetNodes.createRow((i)+1);
-                createCell(rowNodes, 0, node.getId(), null);
+				createCell(rowNodes, 0, node.getId(), null);
                 createCell(rowNodes, 1, node.getLabel(), null);
                 createCell(rowNodes, 2, node.getUrl(), null);
                 createCell(rowNodes, 3, node.getCount(), null);
-                createCell(rowNodes, 4, node.getTimeinterval(), excelUtils.getStyleDate());
+                
+				try{
+					String dateString = rs.getTimestamp("timeinterval").toString();
+					DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					java.util.Date date = dateFormat.parse(dateString);
+					node.setTimeinterval(date);
+					createCell(rowNodes, 4, node.getTimeinterval(), excelUtils.getStyleDate());
+				}
+				catch(Exception ex){
+					//Fecha nula
+					createCell(rowNodes, 4, null, null);
+				}
                 i++;
 			}
             

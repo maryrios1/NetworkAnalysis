@@ -1,5 +1,7 @@
+<%@ page session="false" %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@page import="javax.servlet.http.HttpSession;"%>
+<%@page import="com.NetworkAnalysis.rsc.User" %>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <!--
 	Photon by HTML5 UP
@@ -8,7 +10,8 @@
 -->
 <html>
 <head>
-<title>Get the lead</title>
+
+<title>Network Analysis</title>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -38,10 +41,12 @@
 </head>
 <body>
 <%
-    HttpSession misession= request.getSession();
-    
-    if (misession.getAttribute("user")==null)
-        response.sendRedirect("Login.jsp");
+
+	HttpSession sessionUser = request.getSession(false);// don't create if it doesn't exist
+	if(sessionUser != null && sessionUser.getAttribute("user")!=null) {//&& !sessionUser.isNew()
+		User user = (User)sessionUser.getAttribute("user");
+		if (user == null || user.getName()== null )
+			response.sendRedirect("Login.jsp");			
 %>
 	<!-- Header -->
 	<section id="header">
@@ -50,11 +55,12 @@
 		<h1>
 			Análisis de redes sociales <br />
 		</h1>
-		<p>Mary Ríos :):D</p>
+		<p>Bienvenid@ <%=user.getName() + " " + user.getLastname() %></p>
 		<br /> <br /> <br /> <br /> <br />
 		<ul class="actions">
 			<li><a href="#one" class="button scrolly">Búsquedas</a></li>
 			<li><a href="#two" class="button scrolly">Historial</a></li>
+			<li><a href="LogOutServlet" class="button scrolly">Salir</a></li>
 		</ul>
 	</div>
 	</section>
@@ -578,5 +584,10 @@ print 'It took ' + i + ' iterations to sort the deck.';</code></pre>
 		<!-- <li>Design: <a href="http://html5up.net">HTML5 UP</a></li> -->
 	</ul>
 	</section>
+	<%} 
+	else {
+	    response.sendRedirect("Login.jsp");
+	} 
+	%>
 </body>
 </html>

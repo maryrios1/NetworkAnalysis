@@ -823,6 +823,8 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 	public Search getRecordSearch(int idSearch) throws SQLException {
 		Search search = new Search();
 		search.message.setSource("getRecordSearch");
+		search.message.setMessage("Búsqueda no encontrada");
+		search.message.setStatus("Not Found");
 		try {
 
 			connect();
@@ -851,6 +853,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 		} catch (Exception ex) {
 			search.message.setMessage("ERROR:" + ex.getMessage());
 			search.message.setStatus("ERROR");
+			search.message.setError("ERROR:" + ex.getMessage());
 			search.message.setCode(502);
 			System.out.println("ERROR: " + ex.getMessage());
 			//throw ex;
@@ -942,6 +945,8 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 
 	public User checkLogin(String user, String pwd) {
 		User usr = new User();
+		usr.Message.setStatus("Denied");
+		usr.Message.setMessage("Usuario o password incorrecto.");
 		try {
 			connect();
 			String sql = "SELECT iduser,username,name,lastname,lastlogin,idaccess,enable,email "
@@ -950,7 +955,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			preparedStatement = connect.prepareStatement(sql);
 			ResultSet rs = preparedStatement.executeQuery();
 
-			while (rs.next()) {
+			if (rs.next()) {
 
 				usr.setIDUser(rs.getInt("iduser"));
 				usr.setUserName(user);
@@ -960,9 +965,13 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 				usr.setIDAccess(rs.getInt("idaccess"));
 				usr.setEnable(rs.getBoolean("enable"));
 				usr.setEmail(rs.getString("email"));
+				usr.Message.status="OK";
+				usr.Message.message="Usuario encontrado";
 			}
 		} catch (Exception ex) {
 			System.out.println("ERROR selectUsr: " + ex.getMessage());
+			usr.Message.status="ERROR";
+			usr.Message.setMessage("ERROR selectUsr: " + ex.getMessage());
 		}
 		return usr;
 	}
@@ -1015,12 +1024,15 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 				usr.setLastname(lastname);
 				usr.setEmail(email);
 				usr.setEnable(true);
-				usr.setMessage("OK");
+				usr.Message.setStatus("OK");
+				usr.Message.setMessage("Usuario registrado");
 			}
 
 		} catch (Exception ex) {
 			System.out.println("ERROR UserI_DB: " + ex.getMessage());
-			usr.setMessage("ERROR:" + ex.getMessage());
+			usr.Message.setStatus("ERROR");
+			usr.Message.setSource("registerUser method in ConnectionRDBMS");
+			usr.Message.setMessage("ERROR:" + ex.getMessage());
 			return usr;
 		} finally {
 			try {
@@ -1284,12 +1296,15 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			String sql = "";
 			if (total == -1)
 				sql = "SELECT id, label,url,count,timeinterval " 
-						+ "FROM nodes e "
-						+ "WHERE e.idsearch = " + idSearch + " AND type = '" + type + "';";
+						+ "FROM nodes n "
+						+ "WHERE n.id IN (SELECT e.source FROM edges e WHERE e.idsearch=" + idSearch + " AND type ='" + type + "' ) OR " 
+						+ "n.id IN (SELECT e.target FROM edges e WHERE e.idsearch=" + idSearch + " AND type ='" + type + "' ); " ;
 			else
 				sql = "SELECT id, label,url,count,timeinterval " 
-						+ "FROM nodes e "
-						+ "WHERE e.idsearch = " + idSearch + " AND type = '" + type + "' LIMIT " + total + ";";
+						+ "FROM nodes n "
+						+ "WHERE n.id IN (SELECT e.source FROM edges e WHERE e.idsearch=" + idSearch + " AND type ='" + type + "') OR " 
+						+ "n.id IN (SELECT e.target FROM edges e WHERE e.idsearch=" + idSearch + " AND type ='" + type + "') LIMIT " 
+						+ total + ";";
 
 			System.out.println(sql);
 			/*preparedStatement = connect.prepareStatement(sql);

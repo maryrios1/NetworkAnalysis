@@ -12,10 +12,10 @@ public class GlobalVariables{
 	
 	public GlobalVariables() {
 		//local
-		//connection = "http://localhost:8080/NetworkAnalysis/";
+		connection = "http://localhost:8080/NetworkAnalysis/";
 		FILE_PATH="E:\\Maestria\\Tesis\\Gephi_Test\\";
 		//amazon
-		connection = "http://localhost/NetworkAnalysis/";
+		//connection = "http://localhost/NetworkAnalysis/";
 		//FILE_PATH="\\var\\";
 	}
 	
