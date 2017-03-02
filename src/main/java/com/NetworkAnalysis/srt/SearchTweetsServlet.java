@@ -13,6 +13,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.Path;
 /*
 import javax.ws.rs.client.Client;
@@ -28,6 +29,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.NetworkAnalysis.rsc.GlobalVariablesInterface;
+import com.NetworkAnalysis.rsc.User;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -98,19 +100,29 @@ public class SearchTweetsServlet extends HttpServlet implements GlobalVariablesI
         System.out.println("keywords:" + keywords);
         System.out.println("SearchName: " + SEARCH_NAME);
         System.out.println("SearchType: " + SEARCH_TYPE);              
-        
+        int UserID=-1;
+        HttpSession sessionUser = request.getSession(false);// don't create if it doesn't exist
+		if(sessionUser != null && sessionUser.getAttribute("user")!=null) {
+			User user = (User)sessionUser.getAttribute("user");
+			if (user == null || user.getName()== null )
+				response.sendRedirect("Login.jsp");
+			UserID = user.getIDUser();
+		}
+		else
+			response.sendRedirect("Login.jsp");
+		
         try{
 	        ClientConfig config = new DefaultClientConfig();
 			Client client = Client.create(config);
 			
 			WebResource service = client.resource(REST_URI);
-			String asd = REST_URI + "rest" + SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1";
+			String asd = REST_URI + "rest" + SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/" + UserID;
 			WebResource addService;		
 			
 			if (SEARCH_TYPE.equals("Search"))
-				addService = service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/1");
+				addService = service.path("rest").path(SEARCH_TWEETS + keywords+"/REPLIED/" + SEARCH_NAME+ "/"+ UserID);
 			else
-				addService = service.path("rest").path(STREAM_TWEETS + keywords + "/REPLIED/" + SEARCH_NAME+ "/1");		
+				addService = service.path("rest").path(STREAM_TWEETS + keywords + "/REPLIED/" + SEARCH_NAME+ "/"+UserID);		
 			
 			System.out.println("GetTweets Response: " + getResponse(addService));
 			

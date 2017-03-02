@@ -177,7 +177,7 @@ public class TwitterRequests {
 					tweetsFound = true;
 					templine = line;
 					line = "";
-					System.out.println("templine " + templine);
+					//System.out.println("templine " + templine);
 
 					try {
 						JSONParser parser = new JSONParser();
@@ -187,13 +187,13 @@ public class TwitterRequests {
 						JSONArray jArray = (JSONArray) obj.get("statuses");
 
 						for (int i = 0; i < jArray.size(); i++) {
-							System.out.println("insert into db tweets # " + i);
+							//System.out.println("insert into db tweets # " + i);
 							insertTweetMySQLDB(jArray.get(i).toString(), RelationshipSearch.valueOf(relation),
 									search.getIDSearch());
 
 							// Stop the search if the flag has been changed to
 							if (!dbConnection.selectRecordSearch(search.getIDSearch())) {
-								System.out.println("Stop!!");
+								System.out.println("Stop search " + search.getIDSearch() + "!!");
 								KeepSearch = false;
 								break;
 
@@ -304,7 +304,7 @@ public class TwitterRequests {
 					tweetsFound = true;
 					templine = line;
 					line = "";
-					System.out.println("templine " + templine);
+					//System.out.println("templine " + templine);
 
 					try {
 						JSONParser parser = new JSONParser();
@@ -314,7 +314,7 @@ public class TwitterRequests {
 						JSONArray jArray = (JSONArray) obj.get("statuses");
 
 						for (int i = 0; i < jArray.size(); i++) {
-							System.out.println("insert into db tweets # " + i);
+							//System.out.println("insert into db tweets # " + i);
 							insertTweetMySQLDB(jArray.get(i).toString(), RelationshipSearch.valueOf(relation),
 									search.getIDSearch());
 
@@ -351,6 +351,7 @@ public class TwitterRequests {
 			}
 
 		} catch (Exception ex) {
+			System.out.println("ERROR (startSearchTweets): " + ex.getMessage());
 			msg.setMessage(ex.getMessage());
 			msg.setCode(502);
 			msg.setStatus("ERROR");
@@ -424,7 +425,7 @@ public class TwitterRequests {
 			}
 								
 			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-			System.out.println("GetStreamTweets 2");
+			//System.out.println("GetStreamTweets 2");
 			String templine = "";
 			int i = 0;
 			

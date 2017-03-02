@@ -9,9 +9,11 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import com.NetworkAnalysis.rsc.ConnectionRDBMS;
 import com.NetworkAnalysis.rsc.Search;
+import com.NetworkAnalysis.rsc.User;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -41,8 +43,20 @@ public class GetUserSearchesServlet extends HttpServlet {
 
 		ArrayList searchesList = new ArrayList();
 		try {
-			ConnectionRDBMS connect = new ConnectionRDBMS();
-			searchesList = connect.getAllSearches(1,-1);
+			HttpSession sessionUser = request.getSession(false);// don't create if it doesn't exist
+			if(sessionUser != null && sessionUser.getAttribute("user")!=null) {
+				User user = (User)sessionUser.getAttribute("user");
+				if (user == null || user.getName()== null )
+					response.sendRedirect("Login.jsp");
+				
+				ConnectionRDBMS connect = new ConnectionRDBMS();
+				searchesList = connect.getAllSearches(user.getIDUser(),-1);
+			}
+			else
+			{
+				response.sendRedirect("Login.jsp");	
+			}
+			
 		} catch (Exception ex) {
 			System.out.println("ERROR" + ex.getMessage());
 		}

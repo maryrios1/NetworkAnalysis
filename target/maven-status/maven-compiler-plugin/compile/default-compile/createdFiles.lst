@@ -1,5 +1,4 @@
 com\NetworkAnalysis\rsc\ConnectionUtil.class
-com\NetworkAnalysis\app\SearchManagement$3.class
 com\NetworkAnalysis\rsc\Node.class
 com\NetworkAnalysis\srt\SearchTweetsServlet.class
 com\NetworkAnalysis\rsc\RelationshipSearch$3.class

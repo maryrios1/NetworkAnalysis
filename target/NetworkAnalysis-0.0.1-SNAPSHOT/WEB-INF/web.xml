@@ -31,7 +31,7 @@
     <url-pattern>/ExportToExcel</url-pattern>
   </servlet-mapping>
   
-  <servlet>
+  <!--  <servlet>
     <servlet-name>LogOutServlet</servlet-name>
     <servlet-class>com.NetworkAnalysis.srt.LogOutServlet</servlet-class>
   </servlet>
@@ -39,5 +39,5 @@
     <servlet-name>LogOutServlet</servlet-name>
     <url-pattern>/LogOutServlet</url-pattern>
   </servlet-mapping>
-  
+  -->
 </web-app>

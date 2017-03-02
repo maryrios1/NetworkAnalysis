@@ -80,12 +80,12 @@ public class SearchManagement {
 				//return temMsg;
 			}
 			
-			switch (searchType) {
-			case SEARCH:
+			switch (searchType.toString()) {
+			case "SEARCH":
 				temMsg = tweet.startSearchTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(),
 						Status.RESTART, idSearch);
 				break;
-			case STREAM:
+			case "STREAM":
 				temMsg = tweet.startStreamTweets(search.getSearchwords(), relation, search.getSearchname(), search.getIduser(), 
 						Status.RESTART, idSearch);
 				break;
@@ -101,6 +101,7 @@ public class SearchManagement {
 			temMsg.setStatus("ERROR");
 			temMsg.setObject("RESTART");
 			//msg = gson.toJson(temMsg);
+			System.out.println("ERROR (RestartRequest): " +e.getMessage());
 		}
 
 		return gson.toJson(temMsg);

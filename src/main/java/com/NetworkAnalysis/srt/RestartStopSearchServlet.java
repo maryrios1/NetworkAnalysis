@@ -46,28 +46,34 @@ public class RestartStopSearchServlet extends HttpServlet implements GlobalVaria
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String typeAction = request.getParameter("typeAction");
-		idSearch = request.getParameter("idSearch");
-		String type = request.getParameter("type");
-		String relation = request.getParameter("relation");
-		System.out.println("keywords:" + typeAction);
-		System.out.println("idSearch: " + idSearch);
-		System.out.println("type: " + type);
-		String url = "";
-		System.out.print(REST_URI + "rest/" );
-		if (typeAction.equals("RESTART"))
-			url = "Search/RestartRequest/" + idSearch + "/" + type + "/" + relation;
-		else
-			url = "Search/StopRequest/" + idSearch;
-		
-		System.out.println(url);
-		ClientConfig config = new DefaultClientConfig();
-		Client client = Client.create(config);		
-		WebResource service = client.resource(REST_URI);
-		//WebResource addService = service.path("rest").path(url);
-		response.getWriter().print((service.path("rest").path(url)).accept(MediaType.TEXT_PLAIN).get(String.class));
-		//System.out.println("GetTweets Response: " + getResponse(addService));
-		//response.getWriter().print(getOutputAsJSON(addService));
+		try{
+			String typeAction = request.getParameter("typeAction");
+			idSearch = request.getParameter("idSearch");
+			String type = request.getParameter("type");
+			String relation = request.getParameter("relation");
+			System.out.println("keywords:" + typeAction);
+			System.out.println("idSearch: " + idSearch);
+			System.out.println("type: " + type);
+			String url = "";
+			System.out.print(REST_URI + "rest/" );
+			if (typeAction.equals("RESTART"))
+				url = "Search/RestartRequest/" + idSearch + "/" + type + "/" + relation;
+			else
+				url = "Search/StopRequest/" + idSearch;
+			
+			System.out.println(url);
+			ClientConfig config = new DefaultClientConfig();
+			Client client = Client.create(config);		
+			WebResource service = client.resource(REST_URI);
+			//WebResource addService = service.path("rest").path(url);
+			response.getWriter().print((service.path("rest").path(url)).accept(MediaType.TEXT_PLAIN).get(String.class));
+			//System.out.println("GetTweets Response: " + getResponse(addService));
+			//response.getWriter().print(getOutputAsJSON(addService));
+		}
+		catch(Exception ex){
+			ex.printStackTrace();
+			System.out.println("ERROR(RestartStopServlet): " + ex.getMessage());
+		}
 
 	}
 

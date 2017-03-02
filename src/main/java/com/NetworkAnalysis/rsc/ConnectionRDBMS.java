@@ -44,7 +44,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 	
 	public Connection connect(Connection conn) {
 		try {
-			System.out.println("connect2");
+			//System.out.println("connect2");
 			Class.forName("com.mysql.jdbc.Driver");
 			conn = DriverManager.getConnection("jdbc:mysql://" + HOST + ":" + PORT + "/" + DB + "?" + "user=" + USER
 					+ "&password=" + PASSWORD + "&useUnicode=true");// &characterEncoding=UTF-8
@@ -125,7 +125,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 
 		} catch (Exception e) {
 			System.out.println("error1: " + e.getMessage() + " status: " + status);
-			System.out.println(e.getStackTrace().toString());
+			//System.out.println(e.getStackTrace().toString());
 			throw e;
 
 		} finally {
@@ -281,7 +281,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			// added columns
 
 			if (jsonObject.get("retweeted_status") != null) {
-				System.out.println("new retweeted_status");
+				//System.out.println("new retweeted_status");
 				String retweetString = jsonObject.get("retweeted_status").toString();
 				JSONObject jORetweet = (JSONObject) parser.parse(retweetString);
 
@@ -378,7 +378,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 				jOUser2 = (JSONObject) parser.parse(userRetweetString);
 
 				// tweets
-				System.out.println("RETWEETED in");
+				//System.out.println("RETWEETED in");
 				preparedStatement.setString(1, jOUser.get("id").toString());
 				preparedStatement.setInt(4, idsearch);
 				preparedStatement.setTimestamp(5, dateSql);
@@ -424,9 +424,9 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 					preparedStatement.setString(2,  ((JSONObject) jAUsers.get(i)).get("id").toString());
 					preparedStatement.setString(3, "MENTIONED");
 					status = executeStatement(preparedStatement);
-					System.out.print(i + ",");
+					//System.out.print(i + ",");
 				}
-				System.out.println("");
+				//System.out.println("");
 
 			}
 
@@ -899,7 +899,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 						+ "FROM search s  WHERE s.enable = true AND s.iduser = " + iduser + " ORDER BY startsearch desc LIMIT "
 						+ total + ";";
 
-			System.out.println(sql);
+			//System.out.println(sql);
 			preparedStatement = connect.prepareStatement(sql);
 			ResultSet rs = preparedStatement.executeQuery();
 
@@ -928,12 +928,14 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 
 	public int executeStatement(PreparedStatement pStatement) throws Exception {
 		int status = -1;
+		String repetido="";
 		try {
 			// Insert into DB
 			status = pStatement.executeUpdate();
 		} catch (Exception ex1) {
 			if (ex1.getMessage().startsWith("Duplicate entry '") && ex1.getMessage().endsWith("' for key 'PRIMARY'"))
-				System.out.println("Valor repetido");
+				//System.out.println("Valor repetido");
+				repetido="";
 			else {
 				System.out.println("ERROR: " + ex1.getMessage() + " Query: " + pStatement.toString());
 				throw ex1;
@@ -1066,7 +1068,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
 						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at desc LIMIT " + total + ";";
 
-			System.out.println(sql);
+			//System.out.println(sql);
 			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			// preparedStatement.setFetchSize(Integer.MIN_VALUE);
@@ -1075,7 +1077,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			// preparedStatement = connect.prepareStatement(sql);
 
 			ResultSet rs = stmt.executeQuery(sql); // reparedStatement.executeQuery();
-			System.out.println("Result set!!");
+			//System.out.println("Result set!!");
 			return rs;
 			
 		} catch (Exception ex) {
@@ -1105,7 +1107,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
 						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY created_at desc LIMIT " + total + ";";
 
-			System.out.println(sql);
+			//System.out.println(sql);
 			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			// preparedStatement.setFetchSize(Integer.MIN_VALUE);
@@ -1182,7 +1184,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 						+ "LEFT outer JOIN nodes n2 ON e.idsearch = n2.idsearch and e.target = n2.id "
 						+ "WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
 
-			System.out.println(sql);
+			//System.out.println(sql);
 			//preparedStatement = connect.prepareStatement(sql);
 			//ResultSet rs = preparedStatement.executeQuery();
 			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -1230,7 +1232,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 						+ "FROM edges e " 						
 						+ "WHERE e.idsearch = " + idSearch + " AND e.type = '" + type + "' LIMIT " + total + ";";
 
-			System.out.println(sql);
+			//System.out.println(sql);
 			/*preparedStatement = connect.prepareStatement(sql);
 			rs = preparedStatement.executeQuery();*/
 			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -1262,7 +1264,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 						+ "FROM nodes e "
 						+ "WHERE e.idsearch = " + idSearch + " LIMIT " + total + ";";
 
-			System.out.println(sql);
+			//System.out.println(sql);
 			/*preparedStatement = connect.prepareStatement(sql);
 			ResultSet rs = preparedStatement.executeQuery();*/
 			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -1306,7 +1308,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 						+ "n.id IN (SELECT e.target FROM edges e WHERE e.idsearch=" + idSearch + " AND type ='" + type + "') LIMIT " 
 						+ total + ";";
 
-			System.out.println(sql);
+			//System.out.println(sql);
 			/*preparedStatement = connect.prepareStatement(sql);
 			rs = preparedStatement.executeQuery();*/
 			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -1598,7 +1600,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 						+ "retweeted_user_id,retweeted_user_screen_name,mentioned_users_ids,mentioned_users_screen_names "
 						+ "FROM tweet WHERE idsearch = " + idSearch + " ORDER BY " + orderBy + " desc, created_at LIMIT " + limit + ";";
 
-			System.out.println(sql);
+			//System.out.println(sql);
 			Statement stmt = connect.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
 					java.sql.ResultSet.CONCUR_READ_ONLY);
 			// preparedStatement.setFetchSize(Integer.MIN_VALUE);
@@ -1607,7 +1609,7 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
 			// preparedStatement = connect.prepareStatement(sql);
 
 			ResultSet rs = stmt.executeQuery(sql); // reparedStatement.executeQuery();
-			System.out.println("Result set!!");
+			//System.out.println("Result set!!");
 			return rs;
 			
 		} catch (Exception ex) {
