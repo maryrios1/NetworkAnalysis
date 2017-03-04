@@ -1563,15 +1563,15 @@ public class ConnectionRDBMS implements GlobalVariablesInterface {
                 
                 jsonObject = (JSONObject) obj;
                 java.util.Date dt2 = new java.util.Date();
-                //System.out.println("Tweet #" + i + " Time:" + dt2.toString());
+                
                 //updateTweetDB(jsonObject, RelationshipSearch.REPLIED, IdSearch,IDTweet);
                 insertEdgeDB(Tweet, RelationshipSearch.REPLIED, IdSearch);
                 insertNodeDB(Tweet, RelationshipSearch.REPLIED, IdSearch);
                 dt2 = new java.util.Date();
-                //System.out.println("Tweet #" + i + " Time:" + dt2.toString());
+                
                 if(i%1000==0 ||i%100==0){
                 	java.util.Date dt = new java.util.Date();
-                    System.out.println("Tweet #" + i + " Time:" + dt.toString());
+                    
                 }
             }
             System.out.println("Update tweets finished");

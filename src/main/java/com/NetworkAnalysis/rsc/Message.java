@@ -79,7 +79,8 @@ public class Message {
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return "{Message:" + this.message + ",Status:" + this.status.toString() + ",Error:" + this.error + "}";
+		return "{Message:" + this.message + ",Status:" + this.status.toString() + ",Error:" + this.error + 
+				",Object:" + this.object +",Code:" + this.code +",Source:" + this.source + "}";
 	}
 	
 	

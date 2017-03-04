@@ -3,6 +3,7 @@ package com.NetworkAnalysis.app;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,7 +34,7 @@ import java.util.concurrent.Executor;
 */
 
 @Path("/")
-public class TwitterRequests {	
+public class TwitterRequests extends GlobalVariables{	
 
 	ConnectionRDBMS dbConnection = null;
 	HttpResponse response = null;
@@ -66,9 +67,9 @@ public class TwitterRequests {
 			@PathParam("latitud") String latitud, @PathParam("longitud") String longitud
 	// ,@Suspended final AsyncResponse asyncResponse
 	) throws IOException {
-		String json = startSearchTweets(words, relation, searchName, IDUser, Status.START, 0, latitud, longitud);
-		return json;
-
+		Gson gson = new Gson();
+		Message msg = startSearchTweets(words, relation, searchName, IDUser, Status.START, 0, latitud, longitud);
+		return gson.toJson(msg);
 	}
 	
 	@GET
@@ -130,17 +131,26 @@ public class TwitterRequests {
 			
 			Credential credential = search.getCredential();
 			msg = search.getMessage();
-			
-			if(msg.getStatus().equals("ERROR")){
+			words = filterSearch(words);
+			if(msg.getStatus().equals("ERROR") || words.equals("ERROR")){
 				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.STOP);
+				if(words.equals("ERROR"))
+				{
+					msg.setStatus("ERROR");
+					msg.setMessage("Error encoding url");
+					msg.setError("Error trying to encode the words to search");
+					msg.setCode(304);
+					msg.setObject("STOP");
+					msg.setSource("Search method in url encode");
+				}								
 				return msg;
-			}
-				
+			}						
+			
 			// Connect to twiter API
 			OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(credential.getConsumerKeyStr(),credential.getConsumerSecretStr());
 			oAuthConsumer.setTokenWithSecret(credential.getAccessTokenStr(),credential.getAccessTokenSecretStr());
 
-			httpGet = new HttpGet("https://api.twitter.com/1.1/search/tweets.json?q=" + words + "&count=500&result_type=recent");
+			httpGet = new HttpGet("https://api.twitter.com/1.1/search/tweets.json?q=" + words + "&count=500&result_type=popular");
 
 			oAuthConsumer.sign(httpGet);
 
@@ -227,17 +237,20 @@ public class TwitterRequests {
 
 		} catch (Exception ex) {
 			System.out.println("ERROR: " + ex.getMessage());
+			if(search.getIDSearch()>0)
+				updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.STOP);
 			msg = new Message();
 			msg.setMessage("ERROR: " + ex.getMessage());
 			msg.setCode(502);
 			msg.setStatus("ERROR");
+			msg.setObject("STOP");
 			return msg;
 		} finally {
 			return msg;
 		}
 	}
 
-	public String startSearchTweets(String words, String relation, String searchName, int IDUSer, Status status,
+	public Message startSearchTweets(String words, String relation, String searchName, int IDUSer, Status status,
 			int idSearch, String latitud, String longitud) {
 		Boolean KeepSearch = true;
 		String line = "";
@@ -253,11 +266,19 @@ public class TwitterRequests {
 				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.RESTART);
 			
 			Credential credential = search.getCredential();
-			msg = search.getMessage();
-			
-			if(msg.getStatus().equals("ERROR")){
+			words = filterSearch(words);
+			if(msg.getStatus().equals("ERROR") || words.equals("ERROR")){
 				search = updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.STOP);
-				return gson.toJson(msg);
+				if(words.equals("ERROR"))
+				{
+					msg.setStatus("ERROR");
+					msg.setMessage("Error encoding url");
+					msg.setError("Error trying to encode the words to search");
+					msg.setCode(304);
+					msg.setObject("STOP");
+					msg.setSource("Search method in url encode");
+				}								
+				return msg;
 			}
 			
 			// Connect to twiter API
@@ -335,7 +356,7 @@ public class TwitterRequests {
 			search = updateRecordDB(search.getIDSearch(), SearchType.valueOf(search.getType()), Status.STOP);
 
 			if (search.getMessage().getStatus().equals("ERROR")) {
-				return gson.toJson(search.getMessage());
+				return search.getMessage();
 			}
 
 			if (tweetsFound) {
@@ -352,26 +373,25 @@ public class TwitterRequests {
 
 		} catch (Exception ex) {
 			System.out.println("ERROR (startSearchTweets): " + ex.getMessage());
+			if(search.getIDSearch()>0)
+				updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.STOP);
 			msg.setMessage(ex.getMessage());
 			msg.setCode(502);
 			msg.setStatus("ERROR");
-			return gson.toJson(msg);
+			msg.setObject("STOP");
+			msg.setError(ex.getMessage());
+			return msg;
 		} finally {
-			return gson.toJson(msg);
+			return msg;
 		}
 	}
 
 	public Message startStreamTweets(String word, String relation, String searchName, int idUSer, Status status,
 			int idSearch) {
 		String line = "";
-		Search search ;//= new Search();
-		/*search.setIDSearch(idSearch);
-		search.setSearchwords(word);
-		search.setIduser(idUSer);
-		search.setSearchname(searchName);*/
-		Message msg = null;// = new Message();
-		Boolean KeepSearch = true;
-		//Gson gson = new Gson();
+		Search search = new Search();
+		Message msg = null;
+		Boolean KeepSearch = true;		
 		Boolean tweetsFound = false;
 		System.out.println("Entrando a la busqueda por stream con status: " + status);
 		
@@ -388,12 +408,22 @@ public class TwitterRequests {
 			msg = search.getMessage();
 			System.out.println("Message: " + msg.toString());
 			
-			if(msg.getStatus().equals("ERROR"))
-			{
+			word = filterStream(word);
+			if(msg.getStatus().equals("ERROR") || word.equals("ERROR")){
 				System.out.println("Error creando busqueda en la bd.");
 				idSearch = search.getIDSearch();
 				if (idSearch >0)
-					updateRecordDB(idSearch, SearchType.STREAM, Status.STOP);
+					updateRecordDB(search.getIDSearch(), SearchType.SEARCH, Status.STOP);
+				
+				if(word.equals("ERROR"))
+				{
+					msg.setStatus("ERROR");
+					msg.setMessage("Error encoding url");
+					msg.setError("Error trying to encode the words to search");
+					msg.setCode(304);
+					msg.setObject("STOP");
+					msg.setSource("Search method in url encode");
+				}								
 				return msg;
 			}
 			
@@ -485,10 +515,14 @@ public class TwitterRequests {
 			}
 
 		} catch (Exception ex) {
+			if(search.getIDSearch()>0)
+				updateRecordDB(search.getIDSearch(), SearchType.STREAM, Status.STOP);
 			msg = new Message();
 			msg.setMessage(ex.getMessage());
 			msg.setCode(502);
 			msg.setStatus("ERROR");
+			msg.setObject("STOP");
+			msg.setError(ex.getMessage());
 			System.out.println("ERROR TwitterRequests catch:" + ex.getMessage());
 			return msg;
 		} finally {

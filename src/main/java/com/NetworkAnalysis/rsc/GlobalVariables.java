@@ -1,17 +1,22 @@
 package com.NetworkAnalysis.rsc;
 
+import java.net.URLEncoder;
+
 public class GlobalVariables{
 
 	String connection;
-	//String USER = "cgc_user";
-	String USER = "maryDB";
-	//String PASSWORD = "cgc_D3Access82)";
-	String PASSWORD = "Mary123!";
 	String DB = "TwitterDB";
-	//String HOST = "fixtweetstest.coh6dv3qg5l4.us-west-2.rds.amazonaws.com";
+	/*
+	String USER = "cgc_user";	
+	String PASSWORD = "cgc_D3Access82)";
+	String HOST = "fixtweetstest.coh6dv3qg5l4.us-west-2.rds.amazonaws.com";	
+	String PORT = "1531";
+	*/
+	String USER = "maryDB";
+	String PASSWORD = "Mary123!";
 	String HOST = "localhost";
 	String PORT = "3306";
-	//String PORT = "1531";
+	
 	String FILE_PATH="E:\\Maestria\\Tesis\\Gephi_Test\\";
 	
 	public GlobalVariables() {
@@ -79,6 +84,45 @@ public class GlobalVariables{
 
 	public void setFILE_PATH(String fILE_PATH) {
 		FILE_PATH = fILE_PATH;
+	}
+	
+	// espacio = AND
+	// " OR " = OR
+	// debe estar URL encode
+	public String filterSearch(String words) {
+		String arrayWords[] = words.split(",");
+		String tempWords="";
+		
+		for(int i=0;i<arrayWords.length;i++)
+			tempWords +=arrayWords[i].trim() + ",";		
+		
+		tempWords = tempWords.substring(0, tempWords.length()-4);
+		
+		try{
+			return URLEncoder.encode(tempWords,"UTF-8");
+		}
+		catch(Exception ex){
+			return "ERROR";
+		}				
+	}
+	
+	// espacio = AND
+	// coma = OR
+	public String filterStream(String words){
+		String arrayWords[] = words.split(",");
+		String tempWords="";
+		
+		for(int i=0;i<arrayWords.length;i++)
+			tempWords +=arrayWords[i].trim() + ",";		
+		
+		tempWords = tempWords.substring(0, tempWords.length()-1);
+		
+		try{
+			return URLEncoder.encode(tempWords,"UTF-8");
+		}
+		catch(Exception ex){
+			return "ERROR";
+		}
 	}
 }
 
